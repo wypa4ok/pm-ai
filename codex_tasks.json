@@ -1,0 +1,781 @@
+[
+  {
+    "id": "T0_project_scaffold",
+    "title": "Create repo and Next.js app",
+    "desc": "Initialize git; scaffold Next.js (App Router, TS, Tailwind).",
+    "cmd": [
+      "git init",
+      "npx create-next-app@latest rental-ops --ts --eslint --src-dir --app --tailwind --no-import-alias",
+      "cd rental-ops",
+      "code ."
+    ],
+    "depends_on": []
+  },
+  {
+    "id": "T0_env_basics",
+    "title": "Set up env & secrets structure",
+    "desc": "Create .env.local.example with placeholders for OpenAI, Gmail, WA, Supabase.",
+    "files": [
+      ".env.local.example"
+    ],
+    "cmd": [
+      "cp .env.local.example .env.local"
+    ],
+    "depends_on": [
+      "T0_project_scaffold"
+    ]
+  },
+  {
+    "id": "T0_pkg_install",
+    "title": "Install core deps",
+    "desc": "OpenAI SDK, Supabase, Prisma, Zod, Axios, nodemailer, Google APIs, UUID, date-fns, pino.",
+    "cmd": [
+      "npm i openai @supabase/supabase-js zod axios pino",
+      "npm i -D prisma @prisma/client",
+      "npm i nodemailer googleapis jsonwebtoken uuid date-fns"
+    ],
+    "depends_on": [
+      "T0_project_scaffold"
+    ]
+  },
+  {
+    "id": "T0_repo_layout",
+    "title": "Monorepo-ish layout (apps/packages)",
+    "desc": "Create folders: apps/web, apps/worker, packages/{core,services,adapters,shared}.",
+    "depends_on": [
+      "T0_project_scaffold"
+    ]
+  },
+  {
+    "id": "T0_ports_adapters",
+    "title": "Define ports (interfaces) for adapters",
+    "desc": "EmailClient, WhatsAppClient, ContractorSearch, Storage, AI.",
+    "files": [
+      "packages/services/ports.ts"
+    ],
+    "depends_on": [
+      "T0_repo_layout"
+    ]
+  },
+  {
+    "id": "T0_next_standalone",
+    "title": "Next.js standalone build config",
+    "desc": "Enable output:standalone; Node runtime only (no Edge).",
+    "files": [
+      "apps/web/next.config.js"
+    ],
+    "depends_on": [
+      "T0_project_scaffold"
+    ]
+  },
+  {
+    "id": "T0_docker_web",
+    "title": "Dockerize web (portable)",
+    "desc": "Multi-stage Dockerfile for apps/web (standalone).",
+    "files": [
+      "apps/web/Dockerfile"
+    ],
+    "depends_on": [
+      "T0_next_standalone"
+    ]
+  },
+  {
+    "id": "T0_worker_scaffold",
+    "title": "Worker app scaffold",
+    "desc": "Node app for cron/pollers; health endpoint; logging.",
+    "files": [
+      "apps/worker/src/index.ts"
+    ],
+    "depends_on": [
+      "T0_repo_layout",
+      "T0_pkg_install"
+    ]
+  },
+  {
+    "id": "T0_docker_worker",
+    "title": "Dockerize worker",
+    "desc": "Light Dockerfile for apps/worker.",
+    "files": [
+      "apps/worker/Dockerfile"
+    ],
+    "depends_on": [
+      "T0_worker_scaffold"
+    ]
+  },
+  {
+    "id": "T1_supabase_project",
+    "title": "Create Supabase project",
+    "desc": "Create project; capture URL and anon/service keys; set env vars.",
+    "depends_on": [
+      "T0_env_basics"
+    ]
+  },
+  {
+    "id": "T1_prisma_init",
+    "title": "Prisma init & DATABASE_URL",
+    "desc": "Configure Prisma for Supabase Postgres.",
+    "cmd": [
+      "npx prisma init"
+    ],
+    "depends_on": [
+      "T1_supabase_project",
+      "T0_pkg_install"
+    ]
+  },
+  {
+    "id": "T1_schema_model",
+    "title": "Implement DB schema",
+    "desc": "Models: users, units, tenants, tickets, messages, contractors, agent_events; enums, indexes.",
+    "files": [
+      "prisma/schema.prisma"
+    ],
+    "depends_on": [
+      "T1_prisma_init"
+    ]
+  },
+  {
+    "id": "T1_prisma_migrate",
+    "title": "Run Prisma migrate",
+    "desc": "Apply initial migration.",
+    "cmd": [
+      "npx prisma migrate dev --name init"
+    ],
+    "depends_on": [
+      "T1_schema_model"
+    ]
+  },
+  {
+    "id": "T1_db_helpers",
+    "title": "DB helper layer",
+    "desc": "CRUD helpers: upsertTenant, attachToTicket, logMessage, saveAgentEvent, findContractors.",
+    "files": [
+      "src/server/db.ts"
+    ],
+    "depends_on": [
+      "T1_prisma_migrate"
+    ]
+  },
+  {
+    "id": "T2_auth_single_admin",
+    "title": "Single admin auth (Supabase Auth)",
+    "desc": "Email/password login; protect /app routes.",
+    "files": [
+      "apps/web/src/app/(auth)/login/page.tsx",
+      "apps/web/src/app/(app)/layout.tsx"
+    ],
+    "depends_on": [
+      "T1_supabase_project",
+      "T0_project_scaffold"
+    ]
+  },
+  {
+    "id": "T12_users_roles_rls_schema",
+    "title": "Users/roles + RLS-ready columns",
+    "desc": "Add users(role), owner_user_id to tickets/messages; tenant_user_id nullable; draft policies (disabled).",
+    "files": [
+      "prisma/schema.prisma",
+      "db/sql/rls_policies.sql"
+    ],
+    "depends_on": [
+      "T1_prisma_migrate"
+    ]
+  },
+  {
+    "id": "T12_users_roles_migrate",
+    "title": "Migrate users/roles and RLS columns",
+    "desc": "Run migrate for users/roles/owner columns.",
+    "cmd": [
+      "npx prisma migrate dev --name users_roles_rls"
+    ],
+    "depends_on": [
+      "T12_users_roles_rls_schema"
+    ]
+  },
+  {
+    "id": "T3_openai_client",
+    "title": "OpenAI client + system prompt",
+    "desc": "Server-side client and EN-CA safe-system prompt.",
+    "files": [
+      "src/server/ai/client.ts",
+      "src/server/ai/prompt.ts"
+    ],
+    "depends_on": [
+      "T0_env_basics",
+      "T0_pkg_install"
+    ]
+  },
+  {
+    "id": "T3_tools_contracts",
+    "title": "Tool schemas (Zod)",
+    "desc": "categorize_and_triage & search_contractors; typesafe execution.",
+    "files": [
+      "src/server/ai/tools.ts"
+    ],
+    "depends_on": [
+      "T3_openai_client"
+    ]
+  },
+  {
+    "id": "T3_reasoner",
+    "title": "Reasoning call + tool loop",
+    "desc": "runAgent(ticketSummary,lastMessage) via Responses API + tools.",
+    "files": [
+      "src/server/ai/reasoner.ts"
+    ],
+    "depends_on": [
+      "T3_openai_client",
+      "T3_tools_contracts",
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T3_adapter_gmail",
+    "title": "Gmail adapter",
+    "desc": "Implements EmailClient port (list/parse/send).",
+    "files": [
+      "packages/adapters/email/gmail-adapter.ts"
+    ],
+    "depends_on": [
+      "T0_ports_adapters",
+      "T4_gmail_oauth"
+    ]
+  },
+  {
+    "id": "T3_adapter_wa",
+    "title": "WhatsApp Cloud adapter (receive-only)",
+    "desc": "Implements WhatsAppClient port.",
+    "files": [
+      "packages/adapters/wa/cloud-adapter.ts"
+    ],
+    "depends_on": [
+      "T0_ports_adapters",
+      "T5_wa_cloud_app"
+    ]
+  },
+  {
+    "id": "T3_adapter_storage",
+    "title": "Supabase Storage adapter",
+    "desc": "Implements Storage port (put -> signed URL).",
+    "files": [
+      "packages/adapters/storage/supabase-storage.ts"
+    ],
+    "depends_on": [
+      "T0_ports_adapters",
+      "T1_supabase_project"
+    ]
+  },
+  {
+    "id": "T3_adapter_ai",
+    "title": "AI adapter",
+    "desc": "Implements AI port (triage, draftReply) with OpenAI.",
+    "files": [
+      "packages/adapters/ai/openai-adapter.ts"
+    ],
+    "depends_on": [
+      "T0_ports_adapters",
+      "T3_reasoner"
+    ]
+  },
+  {
+    "id": "T4_gmail_oauth",
+    "title": "Gmail OAuth setup",
+    "desc": "Google Cloud project; enable Gmail API; store creds in env.",
+    "depends_on": [
+      "T0_env_basics"
+    ]
+  },
+  {
+    "id": "T4_gmail_inbound",
+    "title": "Inbound Gmail (label polling)",
+    "desc": "API route to poll label (PM/Inbound), parse, persist as inbound.",
+    "files": [
+      "apps/web/src/app/api/ingest/gmail/route.ts",
+      "src/server/integrations/gmail.ts"
+    ],
+    "depends_on": [
+      "T4_gmail_oauth",
+      "T1_db_helpers",
+      "T3_reasoner",
+      "T3_adapter_gmail"
+    ]
+  },
+  {
+    "id": "T4_gmail_outbound",
+    "title": "Outbound Gmail send",
+    "desc": "Send replies via Gmail API; attachments supported; log outbound.",
+    "files": [
+      "src/server/integrations/gmail-send.ts"
+    ],
+    "depends_on": [
+      "T4_gmail_oauth",
+      "T1_db_helpers",
+      "T3_adapter_gmail"
+    ]
+  },
+  {
+    "id": "T4_cron_ingest",
+    "title": "Cron/Job for Gmail polling",
+    "desc": "Worker job to call ingest periodically (2\u20133 min).",
+    "files": [
+      "apps/worker/src/jobs/gmail-poll.ts"
+    ],
+    "depends_on": [
+      "T4_gmail_inbound",
+      "T0_worker_scaffold"
+    ]
+  },
+  {
+    "id": "T5_wa_cloud_app",
+    "title": "Meta WhatsApp Cloud API app",
+    "desc": "Create app; verify token; webhook placeholders.",
+    "depends_on": [
+      "T0_env_basics"
+    ]
+  },
+  {
+    "id": "T5_wa_webhook",
+    "title": "WA inbound webhook",
+    "desc": "Route to receive text/media; persist; link ticket; call agent.",
+    "files": [
+      "apps/web/src/app/api/webhooks/wa/route.ts",
+      "src/server/integrations/wa.ts"
+    ],
+    "depends_on": [
+      "T5_wa_cloud_app",
+      "T1_db_helpers",
+      "T3_adapter_wa"
+    ]
+  },
+  {
+    "id": "T6_contractor_crud",
+    "title": "Contractor directory CRUD",
+    "desc": "UI + API to add/edit internal contractors.",
+    "files": [
+      "apps/web/src/app/(app)/contractors/page.tsx",
+      "apps/web/src/app/api/contractors/route.ts"
+    ],
+    "depends_on": [
+      "T1_db_helpers",
+      "T2_auth_single_admin"
+    ]
+  },
+  {
+    "id": "T6_external_search",
+    "title": "External contractor lookup",
+    "desc": "Integrate one provider (Yelp/Places) within free quota; normalize fields.",
+    "files": [
+      "src/server/integrations/contractor-search.ts"
+    ],
+    "depends_on": [
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T6_tool_handler",
+    "title": "search_contractors tool handler",
+    "desc": "Internal first, then external; return top 3 suggestions.",
+    "files": [
+      "src/server/ai/tool-handlers.ts"
+    ],
+    "depends_on": [
+      "T3_reasoner",
+      "T6_external_search",
+      "T6_contractor_crud"
+    ]
+  },
+  {
+    "id": "T7_ui_inbox",
+    "title": "Inbox list view",
+    "desc": "Ticket table with filters (status/category/channel/search).",
+    "files": [
+      "apps/web/src/app/(app)/tickets/page.tsx",
+      "apps/web/src/app/(app)/components/TicketTable.tsx"
+    ],
+    "depends_on": [
+      "T2_auth_single_admin",
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T7_ui_ticket_detail",
+    "title": "Ticket detail + timeline",
+    "desc": "Timeline (in/out, channel icons, attachments), right rail (tenant card, contractor panel).",
+    "files": [
+      "apps/web/src/app/(app)/tickets/[id]/page.tsx",
+      "apps/web/src/app/(app)/components/Timeline.tsx"
+    ],
+    "depends_on": [
+      "T7_ui_inbox",
+      "T3_reasoner",
+      "T4_gmail_outbound",
+      "T5_wa_webhook",
+      "T6_tool_handler"
+    ]
+  },
+  {
+    "id": "T7_ui_composer",
+    "title": "Agent composer with approve/send",
+    "desc": "Show agent draft; edit; send via email (WA later).",
+    "files": [
+      "apps/web/src/app/(app)/components/Composer.tsx"
+    ],
+    "depends_on": [
+      "T7_ui_ticket_detail",
+      "T4_gmail_outbound"
+    ]
+  },
+  {
+    "id": "T7_ui_contractor_panel",
+    "title": "Contractor suggestion panel",
+    "desc": "Trade+postal, list top 3; Insert into reply; Draft outreach; Save contractor.",
+    "files": [
+      "apps/web/src/app/(app)/components/ContractorPanel.tsx"
+    ],
+    "depends_on": [
+      "T6_tool_handler",
+      "T7_ui_composer"
+    ]
+  },
+  {
+    "id": "T7_ui_settings",
+    "title": "Settings: channels & templates",
+    "desc": "Connect Gmail, WA verify token/URL; toggle auto-send; canned phrases.",
+    "files": [
+      "apps/web/src/app/(app)/settings/page.tsx"
+    ],
+    "depends_on": [
+      "T4_gmail_oauth",
+      "T5_wa_cloud_app",
+      "T2_auth_single_admin"
+    ]
+  },
+  {
+    "id": "T8_urgency_rules",
+    "title": "Urgent keyword detection + banner",
+    "desc": "Flag urgent cues; banner in UI; suppress auto-send.",
+    "files": [
+      "src/server/ai/urgency.ts"
+    ],
+    "depends_on": [
+      "T3_reasoner",
+      "T7_ui_ticket_detail"
+    ]
+  },
+  {
+    "id": "T9_fulltext_search",
+    "title": "Full-text search (Postgres FTS)",
+    "desc": "FTS/trigram for tickets/messages; UI search box.",
+    "depends_on": [
+      "T1_prisma_migrate",
+      "T7_ui_inbox"
+    ]
+  },
+  {
+    "id": "T9_attachments",
+    "title": "Attachment storage & previews",
+    "desc": "Supabase Storage; preview images in timeline; link PDFs.",
+    "depends_on": [
+      "T1_supabase_project",
+      "T7_ui_ticket_detail",
+      "T3_adapter_storage"
+    ]
+  },
+  {
+    "id": "T12_api_versioning",
+    "title": "Introduce /v1 namespace + error contract",
+    "desc": "Define JSON error shape and pagination.",
+    "files": [
+      "apps/web/src/app/api/v1/README.md"
+    ],
+    "depends_on": [
+      "T7_ui_inbox",
+      "T3_reasoner"
+    ]
+  },
+  {
+    "id": "T12_auth_jwt_middleware",
+    "title": "Supabase JWT middleware",
+    "desc": "Verify access JWT on /v1; attach user context.",
+    "files": [
+      "src/server/api/middleware/auth.ts"
+    ],
+    "depends_on": [
+      "T2_auth_single_admin",
+      "T12_api_versioning"
+    ]
+  },
+  {
+    "id": "T12_openapi_spec",
+    "title": "OpenAPI spec for /v1",
+    "desc": "Endpoints: tickets, messages, contractors/search, uploads/sign, devices/register.",
+    "files": [
+      "openapi/openapi.yaml"
+    ],
+    "depends_on": [
+      "T12_api_versioning"
+    ]
+  },
+  {
+    "id": "T12_api_tickets",
+    "title": "/v1/tickets endpoints",
+    "desc": "Create + list (filters) + get-by-id; scope by owner_user_id.",
+    "files": [
+      "apps/web/src/app/api/v1/tickets/route.ts",
+      "apps/web/src/app/api/v1/tickets/[id]/route.ts"
+    ],
+    "depends_on": [
+      "T12_auth_jwt_middleware",
+      "T1_db_helpers",
+      "T12_users_roles_migrate"
+    ]
+  },
+  {
+    "id": "T12_api_messages",
+    "title": "/v1/messages create",
+    "desc": "Create message on a ticket and send via email; attachments by keys.",
+    "files": [
+      "apps/web/src/app/api/v1/messages/route.ts"
+    ],
+    "depends_on": [
+      "T12_auth_jwt_middleware",
+      "T4_gmail_outbound",
+      "T9_attachments",
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T12_api_contractor_search",
+    "title": "/v1/contractors/search",
+    "desc": "Expose ContractorSearch via HTTP; 24h cache.",
+    "files": [
+      "apps/web/src/app/api/v1/contractors/search/route.ts"
+    ],
+    "depends_on": [
+      "T6_tool_handler",
+      "T12_auth_jwt_middleware"
+    ]
+  },
+  {
+    "id": "T12_signed_uploads",
+    "title": "/v1/uploads/sign",
+    "desc": "Return pre-signed upload URL + object key (scoped path).",
+    "files": [
+      "apps/web/src/app/api/v1/uploads/sign/route.ts",
+      "src/server/integrations/storage.ts"
+    ],
+    "depends_on": [
+      "T1_supabase_project",
+      "T9_attachments",
+      "T12_auth_jwt_middleware"
+    ]
+  },
+  {
+    "id": "T12_devices_register",
+    "title": "/v1/devices/register",
+    "desc": "device_tokens table + endpoint for future push.",
+    "files": [
+      "prisma/schema.prisma",
+      "apps/web/src/app/api/v1/devices/register/route.ts"
+    ],
+    "depends_on": [
+      "T12_users_roles_migrate"
+    ]
+  },
+  {
+    "id": "T12_event_bus",
+    "title": "Lightweight event bus",
+    "desc": "message_events table + producer on message create; consumer stub.",
+    "files": [
+      "prisma/schema.prisma",
+      "src/server/events/producer.ts",
+      "src/server/events/consumer.ts"
+    ],
+    "depends_on": [
+      "T1_db_helpers",
+      "T12_api_messages",
+      "T4_gmail_inbound",
+      "T5_wa_webhook"
+    ]
+  },
+  {
+    "id": "T12_worker_notify_stub",
+    "title": "Worker: notification stub",
+    "desc": "Poll message_events; log would-be push/email.",
+    "files": [
+      "apps/worker/src/notify.ts"
+    ],
+    "depends_on": [
+      "T12_event_bus",
+      "T0_worker_scaffold"
+    ]
+  },
+  {
+    "id": "T12_realtime_channels",
+    "title": "Supabase Realtime channels (docs)",
+    "desc": "Changefeeds for tickets and messages; doc channel names.",
+    "files": [
+      "src/server/realtime/channels.md"
+    ],
+    "depends_on": [
+      "T1_supabase_project",
+      "T12_api_tickets",
+      "T12_api_messages"
+    ]
+  },
+  {
+    "id": "T12_rate_limit",
+    "title": "API rate limiting",
+    "desc": "Per-user limiter (e.g., 60 req/min) on /v1.",
+    "files": [
+      "src/server/api/middleware/rate-limit.ts"
+    ],
+    "depends_on": [
+      "T12_auth_jwt_middleware"
+    ]
+  },
+  {
+    "id": "T12_cors",
+    "title": "CORS for web + future mobile",
+    "desc": "Allow configured origins; return proper headers on /v1.",
+    "files": [
+      "src/server/api/middleware/cors.ts"
+    ],
+    "depends_on": [
+      "T12_api_versioning"
+    ]
+  },
+  {
+    "id": "T12_client_sdk",
+    "title": "Generate typed client SDK",
+    "desc": "openapi-typescript -> packages/client; shared by web/mobile later.",
+    "files": [
+      "packages/client/index.ts",
+      "openapi/openapi.yaml"
+    ],
+    "cmd": [
+      "npx openapi-typescript openapi/openapi.yaml -o packages/client/index.ts"
+    ],
+    "depends_on": [
+      "T12_openapi_spec",
+      "T12_api_tickets",
+      "T12_api_messages",
+      "T12_api_contractor_search",
+      "T12_signed_uploads",
+      "T12_devices_register"
+    ]
+  },
+  {
+    "id": "T12_tests_contract",
+    "title": "API contract tests",
+    "desc": "Supertest suite: JWT auth, error shape, pagination, signed uploads.",
+    "files": [
+      "tests/api.v1.spec.ts"
+    ],
+    "depends_on": [
+      "T12_api_tickets",
+      "T12_api_messages",
+      "T12_signed_uploads",
+      "T12_auth_jwt_middleware"
+    ]
+  },
+  {
+    "id": "T12_docs_mobile_ready",
+    "title": "Mobile-ready API docs",
+    "desc": "Auth flow (Supabase JWT), uploads, realtime channels, deep links.",
+    "files": [
+      "docs/mobile-ready.md"
+    ],
+    "depends_on": [
+      "T12_openapi_spec",
+      "T12_realtime_channels",
+      "T12_client_sdk"
+    ]
+  },
+  {
+    "id": "T10_deploy_vercel",
+    "title": "Deploy web to Vercel (Hobby)",
+    "desc": "Connect repo; set env vars; add /api/health.",
+    "depends_on": [
+      "T7_ui_inbox",
+      "T7_ui_ticket_detail",
+      "T4_cron_ingest"
+    ]
+  },
+  {
+    "id": "T10_worker_host",
+    "title": "Host worker (Render/Fly)",
+    "desc": "Deploy worker container; schedule gmail-poll job.",
+    "depends_on": [
+      "T0_docker_worker",
+      "T4_cron_ingest"
+    ]
+  },
+  {
+    "id": "T10_logging",
+    "title": "Structured logs + token metrics",
+    "desc": "pino logger; per-ticket token counts; error boundaries.",
+    "depends_on": [
+      "T3_reasoner",
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T10_seed_data",
+    "title": "Seed minimal data",
+    "desc": "Script: 2 units, 3 tenants, 3 contractors.",
+    "files": [
+      "scripts/seed.ts"
+    ],
+    "cmd": [
+      "npx ts-node scripts/seed.ts"
+    ],
+    "depends_on": [
+      "T1_db_helpers"
+    ]
+  },
+  {
+    "id": "T11_templates",
+    "title": "Message templates",
+    "desc": "Leak checklist; access window; closure note; insert via Composer.",
+    "depends_on": [
+      "T7_ui_composer"
+    ]
+  },
+  {
+    "id": "T11_readme",
+    "title": "README with runbook",
+    "desc": "Env setup, Gmail label, WA webhook, cron, portability (Docker), future WA outbound.",
+    "files": [
+      "README.md"
+    ],
+    "depends_on": [
+      "T10_deploy_vercel",
+      "T10_worker_host"
+    ]
+  },
+  {
+    "id": "B1_wa_outbound",
+    "title": "WhatsApp outbound + templates",
+    "desc": "Business account + template messages; reply within 24h window.",
+    "depends_on": [
+      "T5_wa_webhook",
+      "T7_ui_composer"
+    ]
+  },
+  {
+    "id": "B2_voice_phase2",
+    "title": "Voice/IVR (Realtime API) for emergencies",
+    "desc": "Phone number, call intake, escalation to owner.",
+    "depends_on": [
+      "T3_reasoner"
+    ]
+  },
+  {
+    "id": "B3_metrics",
+    "title": "Metrics dashboard",
+    "desc": "Open tickets, first-response, time-to-scheduled.",
+    "depends_on": [
+      "T10_logging"
+    ]
+  }
+]
