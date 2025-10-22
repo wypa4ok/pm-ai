@@ -1,0 +1,38 @@
+{
+  "name": "rental-ops",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd apps/web && next dev",
+    "build": "cd apps/web && next build",
+    "start": "cd apps/web && next start",
+    "lint": "cd apps/web && next lint"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.13.0",
+    "@supabase/supabase-js": "^2.43.7",
+    "axios": "^1.6.8",
+    "date-fns": "^3.6.0",
+    "googleapis": "^131.0.0",
+    "next": "14.2.3",
+    "nodemailer": "^6.9.13",
+    "openai": "^4.54.0",
+    "pino": "^8.19.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "uuid": "^9.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.2.65",
+    "@types/react-dom": "^18.2.21",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.3",
+    "postcss": "^8.4.35",
+    "prisma": "^5.13.0",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  }
+}

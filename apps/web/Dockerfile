@@ -1,14 +1,29 @@
-FROM node:20 AS build
+FROM node:20-bullseye AS deps
 WORKDIR /app
-COPY . .
-RUN npm ci || true
-RUN npm run build || true
 
-FROM node:20 AS run
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM node:20-bullseye AS builder
 WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+FROM node:20-bullseye AS runner
+WORKDIR /app
+
 ENV NODE_ENV=production
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public 2>/dev/null || true
+ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+CMD ["node", "apps/web/server.js"]
