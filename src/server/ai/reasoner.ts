@@ -343,15 +343,15 @@ async function executeToolCall(
       ticketId: params.ticketId,
     };
 
-    if (
-      !resolvedInput.location &&
-      params.contractorSearchContext?.location?.postalCode
-    ) {
-      resolvedInput.location = {
-        postalCode: params.contractorSearchContext.location.postalCode,
-        latitude: params.contractorSearchContext.location.latitude,
-        longitude: params.contractorSearchContext.location.longitude,
-      };
+    if (!resolvedInput.location) {
+      const contextLocation = params.contractorSearchContext?.location;
+      if (contextLocation?.postalCode) {
+        resolvedInput.location = {
+          postalCode: contextLocation.postalCode,
+          latitude: contextLocation.latitude,
+          longitude: contextLocation.longitude,
+        };
+      }
     }
 
     if (
@@ -362,8 +362,8 @@ async function executeToolCall(
     }
 
     if (
-      (resolvedInput.limit === undefined || resolvedInput.limit === null) &&
-      params.contractorSearchContext?.limit
+      params.contractorSearchContext?.limit !== undefined &&
+      parsedArgs.raw.limit === undefined
     ) {
       resolvedInput.limit = params.contractorSearchContext.limit;
     }
@@ -488,30 +488,44 @@ async function logAgentEvent(
   }
 }
 
+type ParsedToolArguments<Name extends ToolName> =
+  | {
+      success: true;
+      data: ToolInputByName<Name>;
+      raw: Partial<ToolInputByName<Name>>;
+    }
+  | {
+      success: false;
+      error: string;
+      raw: Partial<ToolInputByName<Name>>;
+    };
+
 function parseToolArguments<Name extends ToolName>(
   json: string,
   schema: ZodSchema,
-) {
-  const raw = parseRaw(json);
+): ParsedToolArguments<Name> {
+  const raw = parseRaw(json) as Partial<ToolInputByName<Name>>;
   const parsed = schema.safeParse(raw) as SafeParseReturnType<
-    unknown,
+    Partial<ToolInputByName<Name>>,
     ToolInputByName<Name>
   >;
+
   if (!parsed.success) {
     return {
-      success: false as const,
+      success: false,
       error: parsed.error.message,
       raw,
     };
   }
+
   return {
-    success: true as const,
-    data: parsed.data as ToolInputByName<Name>,
+    success: true,
+    data: parsed.data,
     raw,
   };
 }
 
-function parseRaw(json: string) {
+function parseRaw(json: string): unknown {
   try {
     return json ? JSON.parse(json) : {};
   } catch (error) {

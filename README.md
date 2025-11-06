@@ -8,4 +8,4 @@ This repo contains a portable task plan and scaffolding to build your AI-assiste
 ## Quick start
 1. Open `codex_tasks.json` and start with `T0_project_scaffold`.
 2. Keep env secrets in `.env.local` (see `.env.local.example`).
-
+3. When you're ready to wire Gmail, follow [`docs/gmail-oauth.md`](docs/gmail-oauth.md) to configure the API client and refresh token.
