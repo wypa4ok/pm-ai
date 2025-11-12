@@ -44,9 +44,12 @@ GMAIL_REFRESH_TOKEN=...
 GMAIL_FROM_ADDRESS=your-address@gmail.com
 GMAIL_LABEL=PM/Inbound
 GMAIL_PROCESSED_LABEL=PM/Processed
+GMAIL_DEFAULT_OWNER_USER_ID=00000000-0000-0000-0000-000000000000
 ```
 
 The `GMAIL_FROM_ADDRESS` should match the mailbox you authorised. The label names should exist in Gmail (create them if needed) – the Gmail adapter uses these to separate new vs processed messages.
+
+`GMAIL_DEFAULT_OWNER_USER_ID` should reference an existing Supabase `users.id` that will own new tickets created from Gmail. Create the user via Supabase Auth and copy its UUID from the `users` table.
 
 ## 4. Verify access
 
