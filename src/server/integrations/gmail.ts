@@ -117,7 +117,7 @@ async function persistMessage(
   return true;
 }
 
-function createGmailClient(): GmailEmailClient {
+export function createGmailClient(): GmailEmailClient {
   return new GmailEmailClient({
     clientId: requireEnv("GOOGLE_CLIENT_ID"),
     clientSecret: requireEnv("GOOGLE_CLIENT_SECRET"),
@@ -129,7 +129,7 @@ function createGmailClient(): GmailEmailClient {
   });
 }
 
-function requireEnv(key: string): string {
+export function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
     throw new Error(`Missing environment variable ${key}`);
