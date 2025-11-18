@@ -6,7 +6,8 @@
     "dev": "cd apps/web && next dev",
     "build": "cd apps/web && next build",
     "start": "cd apps/web && next start",
-    "lint": "cd apps/web && next lint"
+    "lint": "cd apps/web && next lint",
+    "dev:worker": "cd apps/worker && npx ts-node src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.13.0",

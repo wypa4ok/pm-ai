@@ -13,18 +13,21 @@ export async function GET(request: Request) {
       status,
       category,
       channel,
-      OR: search
-        ? [
-            { subject: { contains: search, mode: "insensitive" } },
-            {
-              messages: {
-                some: {
-                  bodyText: { contains: search, mode: "insensitive" },
+      ...(search
+        ? {
+            OR: [
+              { subject: { contains: search, mode: "insensitive" } },
+              { description: { contains: search, mode: "insensitive" } },
+              {
+                messages: {
+                  some: {
+                    bodyText: { contains: search, mode: "insensitive" },
+                  },
                 },
               },
-            },
-          ]
-        : undefined,
+            ],
+          }
+        : {}),
     },
     orderBy: { openedAt: "desc" },
     include: {

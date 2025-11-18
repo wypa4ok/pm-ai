@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 type TicketRow = {
   id: string;
@@ -36,14 +37,16 @@ export default function TicketTable({ tickets }: TicketTableProps) {
           {tickets.map((ticket) => (
             <tr key={ticket.id} className="hover:bg-slate-50">
               <td className="py-3 pr-3 align-top">
-                <div className="flex flex-col gap-1">
-                  <div className="text-sm font-semibold text-slate-900">
-                    {ticket.subject}
+                <Link href={`/tickets/${ticket.id}`}>
+                  <div className="flex flex-col gap-1">
+                    <div className="text-sm font-semibold text-slate-900 hover:underline">
+                      {ticket.subject}
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {ticket.latestMessageSnippet ?? "Awaiting first message"}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    {ticket.latestMessageSnippet ?? "Awaiting first message"}
-                  </p>
-                </div>
+                </Link>
               </td>
               <td className="py-3 pr-3 align-top">
                 <div className="text-sm text-slate-900">

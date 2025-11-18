@@ -1,80 +1,75 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import TicketTable from "../components/TicketTable";
-
-type Ticket = {
-  id: string;
-  subject: string;
-  category: string;
-  status: string;
-  priority: string;
-  channel: string;
-  openedAt: string;
-  tenantName?: string;
-  unitName?: string;
-  latestMessageSnippet?: string;
-};
-
-type TicketsResponse = {
-  tickets: Ticket[];
-};
+import { prisma } from "../../../../../../src/server/db";
 
 const statusOptions = ["OPEN", "IN_PROGRESS", "ESCALATED", "SCHEDULED", "RESOLVED", "CLOSED"];
 const categoryOptions = ["MAINTENANCE", "BILLING", "COMMUNICATION", "OPERATIONS", "OTHER"];
 const channelOptions = ["EMAIL", "WHATSAPP", "SMS", "INTERNAL"];
 
-export default function TicketsPage() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    status: "",
-    category: "",
-    channel: "",
-    search: "",
+function serializeTickets(tickets: any[]) {
+  return tickets.map((ticket) => ({
+    id: ticket.id,
+    subject: ticket.subject,
+    category: ticket.category,
+    status: ticket.status,
+    priority: ticket.priority,
+    channel: ticket.channel,
+    openedAt: ticket.openedAt,
+    tenantName: ticket.tenant
+      ? `${ticket.tenant.firstName} ${ticket.tenant.lastName}`
+      : undefined,
+    unitName: ticket.unit?.name ?? undefined,
+    latestMessageSnippet:
+      ticket.messages[0]?.snippet ??
+      ticket.messages[0]?.bodyText ??
+      ticket.messages[0]?.bodyHtml ??
+      undefined,
+  }));
+}
+
+export default async function TicketsPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[]>;
+}) {
+  const status = typeof searchParams?.status === "string" ? searchParams.status : "";
+  const category = typeof searchParams?.category === "string" ? searchParams.category : "";
+  const channel = typeof searchParams?.channel === "string" ? searchParams.channel : "";
+  const search = typeof searchParams?.search === "string" ? searchParams.search : "";
+
+  const tickets = await prisma.ticket.findMany({
+    where: {
+      status: status || undefined,
+      category: category || undefined,
+      channel: channel || undefined,
+      ...(search
+        ? {
+            OR: [
+              { subject: { contains: search, mode: "insensitive" } },
+              { description: { contains: search, mode: "insensitive" } },
+              {
+                messages: {
+                  some: {
+                    bodyText: { contains: search, mode: "insensitive" },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { openedAt: "desc" },
+    include: {
+      tenant: true,
+      unit: true,
+      messages: {
+        orderBy: { sentAt: "desc" },
+        take: 1,
+      },
+    },
+    take: 50,
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadTickets() {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (filters.status) params.set("status", filters.status);
-        if (filters.category) params.set("category", filters.category);
-        if (filters.channel) params.set("channel", filters.channel);
-        if (filters.search) params.set("search", filters.search);
-
-        const response = await fetch(`/api/tickets?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error("Failed to load tickets");
-        }
-        const data = (await response.json()) as TicketsResponse;
-        if (isMounted) {
-          setTickets(data.tickets ?? []);
-        }
-      } catch (err) {
-        console.error(err);
-        if (isMounted) {
-          setError("Failed to load tickets. Please try again.");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadTickets();
-    return () => {
-      isMounted = false;
-    };
-  }, [filters]);
-
-  const filteredTickets = useMemo(() => tickets, [tickets]);
+  const serialized = serializeTickets(tickets);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
@@ -87,15 +82,13 @@ export default function TicketsPage() {
       </header>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <form className="grid gap-4 md:grid-cols-4">
+        <form className="grid gap-4 md:grid-cols-4" method="get">
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Status
             <select
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              value={filters.status}
-              onChange={(event) =>
-                setFilters((prev) => ({ ...prev, status: event.target.value }))
-              }
+              name="status"
+              defaultValue={status}
             >
               <option value="">All</option>
               {statusOptions.map((option) => (
@@ -110,10 +103,8 @@ export default function TicketsPage() {
             Category
             <select
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              value={filters.category}
-              onChange={(event) =>
-                setFilters((prev) => ({ ...prev, category: event.target.value }))
-              }
+              name="category"
+              defaultValue={category}
             >
               <option value="">All</option>
               {categoryOptions.map((option) => (
@@ -128,10 +119,8 @@ export default function TicketsPage() {
             Channel
             <select
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              value={filters.channel}
-              onChange={(event) =>
-                setFilters((prev) => ({ ...prev, channel: event.target.value }))
-              }
+              name="channel"
+              defaultValue={channel}
             >
               <option value="">All</option>
               {channelOptions.map((option) => (
@@ -146,10 +135,8 @@ export default function TicketsPage() {
             Search
             <input
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              value={filters.search}
-              onChange={(event) =>
-                setFilters((prev) => ({ ...prev, search: event.target.value }))
-              }
+              name="search"
+              defaultValue={search}
               placeholder="Subject, tenant, keywords"
             />
           </label>
@@ -157,16 +144,10 @@ export default function TicketsPage() {
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        {loading ? (
-          <p className="text-sm text-slate-500">Loading tickets...</p>
-        ) : error ? (
-          <p className="text-sm text-red-500">{error}</p>
-        ) : filteredTickets.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            No tickets match the current filters.
-          </p>
+        {serialized.length === 0 ? (
+          <p className="text-sm text-slate-500">No tickets match the current filters.</p>
         ) : (
-          <TicketTable tickets={filteredTickets} />
+          <TicketTable tickets={serialized} />
         )}
       </section>
     </div>

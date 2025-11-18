@@ -1,1 +1,2 @@
 provider = "postgresql"
+watch_migration = "20250119020000_fulltext_search"

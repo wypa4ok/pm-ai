@@ -78,6 +78,10 @@ export default function LoginPage({
 }: {
   searchParams?: Record<string, string | string[]>;
 }) {
+  const roleParam =
+    typeof searchParams?.role === "string" && searchParams.role === "tenant"
+      ? "tenant"
+      : "landlord";
   const rawError =
     typeof searchParams?.error === "string" ? searchParams.error : undefined;
   const error =
@@ -91,7 +95,7 @@ export default function LoginPage({
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-semibold text-white">Sign in</h1>
           <p className="text-sm text-slate-300">
-            Use the Supabase admin credentials to access the console.
+            Choose a portal and sign in with your account.
           </p>
         </div>
 
@@ -102,6 +106,27 @@ export default function LoginPage({
         ) : null}
 
         <form action={loginAction} className="space-y-5">
+          <fieldset className="grid grid-cols-2 gap-3 text-sm font-medium text-slate-200/80">
+            <label className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
+              <input
+                type="radio"
+                name="role"
+                value="landlord"
+                defaultChecked={roleParam === "landlord"}
+              />
+              Landlord
+            </label>
+            <label className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
+              <input
+                type="radio"
+                name="role"
+                value="tenant"
+                defaultChecked={roleParam === "tenant"}
+              />
+              Tenant
+            </label>
+          </fieldset>
+
           <div className="space-y-2 text-left">
             <label className="block text-sm font-medium text-slate-200">
               Email

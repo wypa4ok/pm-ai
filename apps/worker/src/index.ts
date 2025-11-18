@@ -1,5 +1,7 @@
 import http from "node:http";
+import { setInterval } from "node:timers";
 import { pino } from "pino";
+import { runGmailPoll } from "./jobs/gmail-poll";
 
 const logger = pino({
   name: "worker",
@@ -36,6 +38,11 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
   logger.info({ port }, "worker ready");
+
+  const pollInterval = Number(process.env.GMAIL_POLL_INTERVAL_MS ?? 120000);
+  setInterval(() => {
+    runGmailPoll(logger);
+  }, pollInterval).unref();
 });
 
 const shutdown = (signal: NodeJS.Signals) => {

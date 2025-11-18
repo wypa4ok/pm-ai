@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -73,11 +74,27 @@ export default async function AppLayout({
             Property Management Workspace
           </h1>
         </div>
-        <div className="text-right text-sm text-slate-500">
-          <p className="font-medium text-slate-700">
-            {user.email ?? "Signed in"}
-          </p>
-          <p className="text-xs text-slate-400">Supabase Admin</p>
+        <div className="flex items-center gap-6 text-sm text-slate-600">
+          <nav className="flex items-center gap-4">
+            <Link href="/tickets" className="hover:text-slate-900">
+              Tickets
+            </Link>
+            <Link href="/contractors" className="hover:text-slate-900">
+              Contractors
+            </Link>
+            <Link href="/settings" className="hover:text-slate-900">
+              Settings
+            </Link>
+            <Link href="/" className="hover:text-slate-900">
+              Home
+            </Link>
+          </nav>
+          <div className="text-right">
+            <p className="font-medium text-slate-700">
+              {user.email ?? "Signed in"}
+            </p>
+            <p className="text-xs text-slate-400">Supabase Admin</p>
+          </div>
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>
