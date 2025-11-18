@@ -3,10 +3,10 @@ import { searchExternalContractors } from "../../../../../../../src/server/integ
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category") ?? undefined;
-  const term = searchParams.get("term") ?? undefined;
-  const location = searchParams.get("location") ?? "New York, NY";
-  const limit = Number(searchParams.get("limit") ?? "3");
+  const category = searchParams.get("category") ?? "handyman";
+  const term = searchParams.get("term") ?? "handyman";
+  const location = searchParams.get("location") ?? "Saint John, NB, Canada";
+  const limit = Number(searchParams.get("limit") ?? "5");
 
   try {
     const contractors = await searchExternalContractors({

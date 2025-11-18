@@ -7,9 +7,6 @@ export default function HomePage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 text-center text-white">
         <h1 className="text-3xl font-semibold">Choose your portal</h1>
-        <p className="max-w-xl text-base text-slate-200/80">
-          Landlords manage the console; tenants view their unit and tickets.
-        </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <a
             href="/login?role=landlord"
@@ -17,7 +14,7 @@ export default function HomePage() {
           >
             <span className="text-lg font-semibold">Landlord</span>
             <span className="text-sm text-slate-200/80">
-              Access inbox, contractors, settings, and approvals.
+              Manage you properties and tenants.
             </span>
           </a>
           <a
@@ -26,7 +23,7 @@ export default function HomePage() {
           >
             <span className="text-lg font-semibold">Tenant</span>
             <span className="text-sm text-slate-200/80">
-              View your rental info and track your tickets.
+              Track yout maintenance requests and payments.
             </span>
           </a>
         </div>

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const NEXT_PUBLIC_PATH_AFTER_LOGIN = "/tickets";
+const NEXT_PUBLIC_PATH_AFTER_LOGIN = "/";
 
 async function loginAction(formData: FormData) {
   "use server";

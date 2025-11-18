@@ -14,6 +14,13 @@ type TicketMessage = {
   bodyText?: string | null;
   bodyHtml?: string | null;
   sentAt: string;
+  attachments?: Array<{
+    id?: string;
+    filename: string;
+    mimeType?: string;
+    sizeInBytes?: number;
+    url?: string;
+  }>;
 };
 
 type Ticket = {
@@ -85,6 +92,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
         timestamp: msg.sentAt,
         description: msg.bodyText ?? msg.bodyHtml ?? msg.subject ?? "",
         badge: msg.channel,
+        attachments: msg.attachments,
       })),
     ];
     return items;

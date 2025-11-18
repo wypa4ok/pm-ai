@@ -8,6 +8,8 @@ type Contractor = {
   name: string;
   phone?: string;
   email?: string;
+  address?: string;
+  website?: string;
   rating?: number;
   reviewCount?: number;
   source: string;
@@ -39,10 +41,10 @@ export default function ContractorPanel({
       setError(null);
       try {
         const params = new URLSearchParams({
-          category,
+          category: category || "handyman",
           location,
+          term: specialty || "handyman",
         });
-        if (specialty) params.set("term", specialty);
         const response = await fetch(`/api/contractors/external?${params.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch contractors");
         const data = await response.json();
@@ -106,7 +108,7 @@ export default function ContractorPanel({
                 <div>
                   <p className="font-semibold text-slate-900">{contractor.name}</p>
                   <p className="text-xs text-slate-500">
-                    {contractor.email ?? contractor.phone ?? contractor.source}
+                    {contractor.address ?? contractor.source}
                   </p>
                   {contractor.rating ? (
                     <p className="text-xs text-slate-500">
@@ -126,9 +128,19 @@ export default function ContractorPanel({
                   </button>
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-3 text-xs text-slate-600">
+              <div className="mt-2 flex flex-col gap-1 text-xs text-slate-600">
                 {contractor.phone ? <span>{contractor.phone}</span> : null}
                 {contractor.email ? <span>{contractor.email}</span> : null}
+                {contractor.website ? (
+                  <a
+                    href={contractor.website}
+                    className="text-blue-600 hover:text-blue-500"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {contractor.website}
+                  </a>
+                ) : null}
               </div>
             </li>
           ))}

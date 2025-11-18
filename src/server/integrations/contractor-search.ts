@@ -1,5 +1,7 @@
 const GOOGLE_PLACES_ENDPOINT =
   "https://maps.googleapis.com/maps/api/place/textsearch/json";
+const GOOGLE_PLACES_DETAILS_ENDPOINT =
+  "https://maps.googleapis.com/maps/api/place/details/json";
 
 export interface ExternalContractorSearchInput {
   category?: string;
@@ -57,22 +59,59 @@ export async function searchExternalContractors(
     return [];
   }
 
-  return (data.results ?? [])
-    .slice(0, input.limit ?? 5)
-    .map((place) => ({
-      id: place.place_id,
-      name: place.name,
-      phone: place.formatted_phone_number,
-      website: place.website,
-      rating: place.rating ?? undefined,
-      reviewCount: place.user_ratings_total ?? undefined,
-      address: place.formatted_address,
-      source: "google",
-      metadata: {
-        category: input.category,
-        types: place.types,
-      },
-    }));
+  const places = (data.results ?? []).slice(0, input.limit ?? 5);
+
+  const detailed = await Promise.all(
+    places.map(async (place) => {
+      // Fetch details to get phone/website which are not returned by textsearch
+      try {
+        const detailParams = new URLSearchParams({
+          place_id: place.place_id,
+          key: apiKey,
+          fields:
+            "name,formatted_phone_number,international_phone_number,formatted_address,website,rating,user_ratings_total,types",
+        });
+        const detailRes = await fetch(
+          `${GOOGLE_PLACES_DETAILS_ENDPOINT}?${detailParams.toString()}`,
+        );
+        if (!detailRes.ok) throw new Error(`details status ${detailRes.status}`);
+        const detailJson = (await detailRes.json()) as GooglePlaceDetailsResponse;
+        const detail = detailJson.result ?? {};
+        return {
+          id: place.place_id,
+          name: place.name,
+          phone: detail.formatted_phone_number ?? detail.international_phone_number,
+          website: detail.website,
+          rating: detail.rating ?? place.rating ?? undefined,
+          reviewCount: detail.user_ratings_total ?? place.user_ratings_total ?? undefined,
+          address: detail.formatted_address ?? place.formatted_address,
+          source: "google",
+          metadata: {
+            category: input.category,
+            types: detail.types ?? place.types,
+          },
+        } satisfies ExternalContractorProfile;
+      } catch (error) {
+        console.error("Place details fetch failed", error);
+        return {
+          id: place.place_id,
+          name: place.name,
+          phone: place.formatted_phone_number,
+          website: place.website,
+          rating: place.rating ?? undefined,
+          reviewCount: place.user_ratings_total ?? undefined,
+          address: place.formatted_address,
+          source: "google",
+          metadata: {
+            category: input.category,
+            types: place.types,
+          },
+        } satisfies ExternalContractorProfile;
+      }
+    }),
+  );
+
+  return detailed;
 }
 
 function buildQuery(input: ExternalContractorSearchInput) {
@@ -91,9 +130,23 @@ type GooglePlacesResponse = {
     formatted_phone_number?: string;
     rating?: number;
     user_ratings_total?: number;
-    website?: string;
     types?: string[];
   }>;
+  status?: string;
+  error_message?: string;
+};
+
+type GooglePlaceDetailsResponse = {
+  result?: {
+    name?: string;
+    formatted_address?: string;
+    formatted_phone_number?: string;
+    international_phone_number?: string;
+    website?: string;
+    rating?: number;
+    user_ratings_total?: number;
+    types?: string[];
+  };
   status?: string;
   error_message?: string;
 };

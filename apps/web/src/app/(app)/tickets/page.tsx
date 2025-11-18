@@ -1,5 +1,5 @@
 import TicketTable from "../components/TicketTable";
-import { prisma } from "../../../../../../src/server/db";
+import { searchTickets } from "../../../../../../src/server/search/tickets";
 
 const statusOptions = ["OPEN", "IN_PROGRESS", "ESCALATED", "SCHEDULED", "RESOLVED", "CLOSED"];
 const categoryOptions = ["MAINTENANCE", "BILLING", "COMMUNICATION", "OPERATIONS", "OTHER"];
@@ -36,37 +36,12 @@ export default async function TicketsPage({
   const channel = typeof searchParams?.channel === "string" ? searchParams.channel : "";
   const search = typeof searchParams?.search === "string" ? searchParams.search : "";
 
-  const tickets = await prisma.ticket.findMany({
-    where: {
-      status: status || undefined,
-      category: category || undefined,
-      channel: channel || undefined,
-      ...(search
-        ? {
-            OR: [
-              { subject: { contains: search, mode: "insensitive" } },
-              { description: { contains: search, mode: "insensitive" } },
-              {
-                messages: {
-                  some: {
-                    bodyText: { contains: search, mode: "insensitive" },
-                  },
-                },
-              },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { openedAt: "desc" },
-    include: {
-      tenant: true,
-      unit: true,
-      messages: {
-        orderBy: { sentAt: "desc" },
-        take: 1,
-      },
-    },
-    take: 50,
+  const tickets = await searchTickets({
+    status: status || undefined,
+    category: category || undefined,
+    channel: channel || undefined,
+    search: search || undefined,
+    limit: 50,
   });
 
   const serialized = serializeTickets(tickets);

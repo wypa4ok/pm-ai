@@ -47,6 +47,7 @@ export async function GET(
         bodyText: msg.bodyText,
         bodyHtml: msg.bodyHtml,
         sentAt: msg.sentAt,
+        attachments: msg.attachments,
       })),
     },
   });

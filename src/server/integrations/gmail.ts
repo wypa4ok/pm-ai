@@ -2,6 +2,7 @@ import { MessageChannel, MessageDirection } from "@prisma/client";
 import { GmailEmailClient } from "../../../packages/adapters/email/gmail-adapter";
 import type { EmailMessage } from "../../../packages/services/ports";
 import { prisma, logMessage } from "../db";
+import { getStorage } from "../storage";
 
 export interface GmailIngestOptions {
   label?: string;
@@ -87,6 +88,8 @@ async function persistMessage(
       })
     ).id;
 
+  const uploadedAttachments = await uploadAttachments(ticketId, message.attachments);
+
   await logMessage(
     {
       ticketId,
@@ -96,12 +99,7 @@ async function persistMessage(
       subject: message.subject,
       bodyText: message.bodyText ?? message.snippet ?? null,
       bodyHtml: message.bodyHtml,
-      attachments: message.attachments.map((attachment) => ({
-        id: attachment.id,
-        filename: attachment.filename,
-        mimeType: attachment.mimeType,
-        sizeInBytes: attachment.sizeInBytes,
-      })),
+      attachments: uploadedAttachments,
       externalId: message.id,
       metadata: {
         from: message.from,
@@ -115,6 +113,40 @@ async function persistMessage(
   );
 
   return true;
+}
+
+async function uploadAttachments(
+  ticketId: string,
+  attachments: EmailMessage["attachments"],
+) {
+  if (!attachments?.length) {
+    return [];
+  }
+
+  const storage = getStorage();
+  const uploaded = await Promise.all(
+    attachments.map(async (attachment) => {
+      const path = `tickets/${ticketId}/${Date.now()}-${attachment.filename}`;
+      const { signedUrl, expiresAt } = await storage.putObject({
+        path,
+        body: attachment.data,
+        contentType: attachment.mimeType,
+        cacheControl: "3600",
+      });
+
+      return {
+        id: attachment.id,
+        filename: attachment.filename,
+        mimeType: attachment.mimeType,
+        sizeInBytes: attachment.sizeInBytes,
+        url: signedUrl,
+        expiresAt: expiresAt.toISOString(),
+        storagePath: path,
+      };
+    }),
+  );
+
+  return uploaded;
 }
 
 export function createGmailClient(): GmailEmailClient {
