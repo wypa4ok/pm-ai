@@ -62,9 +62,7 @@ export async function sendGmailMessage(
   return response;
 }
 
-function buildAttachmentMetadata(
-  attachments?: EmailSendAttachmentInput[],
-) {
+function buildAttachmentMetadata(attachments?: EmailSendAttachmentInput[]) {
   if (!attachments?.length) {
     return null;
   }
@@ -72,7 +70,9 @@ function buildAttachmentMetadata(
   return attachments.map((attachment) => ({
     filename: attachment.filename,
     mimeType: attachment.mimeType,
-    sizeInBytes: estimateSize(attachment.content),
+    sizeInBytes: attachment.content ? estimateSize(attachment.content) : undefined,
+    bucket: attachment.bucket,
+    path: attachment.path,
   }));
 }
 

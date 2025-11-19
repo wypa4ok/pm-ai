@@ -1,1 +1,375 @@
-// placeholder
+openapi: 3.0.3
+info:
+  title: Rental Ops API
+  version: "1.0.0"
+  description: Versioned API under /api/v1 for tickets, messages, contractor search, and uploads.
+servers:
+  - url: https://example.com/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              nullable: true
+      required: [error]
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        mimeType:
+          type: string
+        sizeInBytes:
+          type: integer
+        url:
+          type: string
+          format: uri
+      required: [filename]
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        ticketId:
+          type: string
+        direction:
+          type: string
+          enum: [INBOUND, OUTBOUND]
+        channel:
+          type: string
+          enum: [EMAIL, WHATSAPP, SMS, INTERNAL]
+        subject:
+          type: string
+          nullable: true
+        bodyText:
+          type: string
+          nullable: true
+        bodyHtml:
+          type: string
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        channel:
+          type: string
+        openedAt:
+          type: string
+          format: date-time
+        tenantId:
+          type: string
+          nullable: true
+        unitId:
+          type: string
+          nullable: true
+        latestMessageSnippet:
+          type: string
+          nullable: true
+      required: [id, subject, category, status, priority, channel, openedAt]
+    TicketWithMessages:
+      allOf:
+        - $ref: "#/components/schemas/Ticket"
+        - type: object
+          properties:
+            tenantName:
+              type: string
+              nullable: true
+            unitName:
+              type: string
+              nullable: true
+            messages:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+    Contractor:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        rating:
+          type: number
+          nullable: true
+        reviewCount:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        source:
+          type: string
+paths:
+  /tickets:
+    get:
+      security:
+        - bearerAuth: []
+      summary: List tickets
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: channel
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: Tickets found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                description: { type: string }
+                category: { type: string }
+                priority: { type: string }
+                channel: { type: string }
+                tenantId: { type: string, format: uuid }
+                unitId: { type: string, format: uuid }
+              required: [subject]
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tickets/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      summary: Get ticket by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ticket found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/TicketWithMessages"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /messages:
+    post:
+      security:
+        - bearerAuth: []
+      summary: Send message on a ticket (email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticketId: { type: string, format: uuid }
+                to: { type: array, items: { type: string, format: email } }
+                cc: { type: array, items: { type: string, format: email } }
+                bcc: { type: array, items: { type: string, format: email } }
+                subject: { type: string }
+                text: { type: string }
+                html: { type: string }
+                attachments:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: object
+                        properties:
+                          filename: { type: string }
+                          mimeType: { type: string }
+                          contentBase64: { type: string }
+                        required: [filename, contentBase64]
+                      - type: object
+                        properties:
+                          filename: { type: string }
+                          mimeType: { type: string }
+                          bucket: { type: string }
+                          path: { type: string }
+                        required: [filename, path]
+              required: [ticketId, to, subject]
+      responses:
+        "200":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: "#/components/schemas/Message"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /contractors/search:
+    get:
+      security:
+        - bearerAuth: []
+      summary: Search contractors (external)
+      parameters:
+        - in: query
+          name: category
+          schema: { type: string, default: handyman }
+        - in: query
+          name: term
+          schema: { type: string }
+        - in: query
+          name: location
+          schema: { type: string, default: "Saint John, NB, Canada" }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 10, default: 5 }
+      responses:
+        "200":
+          description: Contractors found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Contractor"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /uploads/sign:
+    post:
+      security:
+        - bearerAuth: []
+      summary: Get signed upload URL for attachments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                path: { type: string, description: "Storage path to upload to" }
+                contentType: { type: string }
+                bucket: { type: string, default: attachments }
+              required: [path, contentType]
+      responses:
+        "200":
+          description: Signed upload URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signedUrl: { type: string, format: uri }
+                  token: { type: string }
+                  bucket: { type: string }
+                  path: { type: string }
+                  contentType: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+security:
+  - bearerAuth: []

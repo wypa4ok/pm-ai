@@ -3,6 +3,7 @@ import type {
   Storage,
   StoragePutParams,
   StoragePutResult,
+  StorageSignedUploadResult,
 } from "../../services/ports";
 
 export interface SupabaseStorageAdapterOptions {
@@ -48,7 +49,10 @@ export class SupabaseStorageAdapter implements Storage {
     const payload =
       typeof params.body === "string" ? Buffer.from(params.body) : params.body;
 
-    const { error } = await this.client.storage.from(this.bucket).upload(path, payload, {
+    // Allow caller to pass a different bucket; default to adapter bucket.
+    const bucket = params.bucket || this.bucket;
+
+    const { error } = await this.client.storage.from(bucket).upload(path, payload, {
       contentType: params.contentType,
       cacheControl: params.cacheControl,
       upsert: true,
@@ -116,6 +120,39 @@ export class SupabaseStorageAdapter implements Storage {
         `Failed to remove object ${targetBucket}/${normalizedPath}: ${error.message}`,
       );
     }
+  }
+
+  async createSignedUploadUrl(params: {
+    bucket?: string;
+    path: string;
+    expiresInSeconds?: number;
+  }): Promise<StorageSignedUploadResult> {
+    const bucket = params.bucket || this.bucket;
+    const path = this.normalizePath(params.path);
+    const expires =
+      params.expiresInSeconds && params.expiresInSeconds > 0
+        ? params.expiresInSeconds
+        : this.defaultExpiresIn;
+
+    const { data, error } = await this.client.storage
+      .from(bucket)
+      .createSignedUploadUrl(path, expires);
+
+    if (error || !data?.signedUrl || !data.path || !data.token) {
+      throw new Error(
+        `Failed to create signed upload URL for ${bucket}/${path}: ${
+          error?.message ?? "Unknown error"
+        }`,
+      );
+    }
+
+    return {
+      signedUrl: data.signedUrl,
+      token: data.token,
+      path: data.path,
+      bucket,
+      expiresAt: new Date(Date.now() + expires * 1000),
+    };
   }
 
   private normalizePath(path: string): string {

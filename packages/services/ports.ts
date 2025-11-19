@@ -33,7 +33,9 @@ export interface EmailMessage {
 export interface EmailSendAttachmentInput {
   filename: string;
   mimeType: string;
-  content: Buffer | Uint8Array | string;
+  content?: Buffer | Uint8Array | string;
+  path?: string;
+  bucket?: string;
 }
 
 export interface EmailSendRequest {
@@ -116,7 +118,7 @@ export interface ContractorSearch {
 }
 
 export interface StoragePutParams {
-  bucket: string;
+  bucket?: string;
   path: string;
   contentType: string;
   body: Buffer | Uint8Array | string;
@@ -128,6 +130,14 @@ export interface StoragePutResult {
   expiresAt: Date;
 }
 
+export interface StorageSignedUploadResult {
+  signedUrl: string;
+  token: string;
+  expiresAt: Date;
+  path: string;
+  bucket: string;
+}
+
 export interface Storage {
   putObject(params: StoragePutParams): Promise<StoragePutResult>;
   getSignedUrl(
@@ -136,6 +146,11 @@ export interface Storage {
     expiresInSeconds: number,
   ): Promise<string>;
   removeObject(bucket: string, path: string): Promise<void>;
+  createSignedUploadUrl(params: {
+    bucket?: string;
+    path: string;
+    expiresInSeconds?: number;
+  }): Promise<StorageSignedUploadResult>;
 }
 
 export type ConversationRole = "system" | "assistant" | "user";
