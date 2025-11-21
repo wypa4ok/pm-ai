@@ -2,6 +2,13 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { RoleSwitcher } from "../../components/RoleSwitcher";
+import {
+  ACTIVE_ROLE_COOKIE,
+  deriveRoles,
+  fetchSupabaseUser,
+  type SessionRole,
+} from "../../server/session/role";
 
 type SupabaseUser = {
   id: string;
@@ -9,7 +16,10 @@ type SupabaseUser = {
   user_metadata?: Record<string, unknown>;
 };
 
-async function requireSession(): Promise<SupabaseUser> {
+async function requireOwnerSession(): Promise<{
+  user: SupabaseUser & { roles: SessionRole[] };
+  activeRole: SessionRole;
+}> {
   const cookieStore = cookies();
   const accessToken = cookieStore.get("sb-access-token")?.value;
 
@@ -17,45 +27,62 @@ async function requireSession(): Promise<SupabaseUser> {
     redirect("/login");
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    redirect(
-      "/login?error=Supabase%20env%20vars%20(SUPABASE_URL,%20SUPABASE_ANON_KEY)%20missing",
-    );
-  }
-
-  let response: Response;
-  try {
-    response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      method: "GET",
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      cache: "no-store",
-    });
-  } catch (error) {
-    console.error("Supabase auth check failed", error);
-    redirect("/login?error=Unable%20to%20reach%20Supabase.%20Please%20retry.");
-  }
-
-  if (!response.ok) {
+  const supabaseUser = await fetchSupabaseUser(accessToken);
+  if (!supabaseUser) {
     cookieStore.delete("sb-access-token");
     cookieStore.delete("sb-refresh-token");
     redirect("/login?error=Session%20expired.%20Please%20sign%20in%20again.");
   }
 
-  const user = (await response.json()) as SupabaseUser | { user?: SupabaseUser };
-  const normalized =
-    "id" in user ? (user as SupabaseUser) : ((user as { user?: SupabaseUser }).user ?? null);
-
-  if (!normalized || !normalized.id) {
-    redirect("/login?error=Unable%20to%20load%20session");
+  const roles = deriveRoles(supabaseUser);
+  if (!roles.includes("OWNER")) {
+    if (roles.includes("TENANT")) {
+      setActiveRoleCookie("TENANT", cookieStore);
+      redirect("/tenant");
+    }
+    redirect("/login?error=Owner%20access%20required");
   }
 
-  return normalized;
+  const activeRole = ensureActiveRole("OWNER", roles, cookieStore);
+  if (activeRole !== "OWNER") {
+    redirect(activeRole === "TENANT" ? "/tenant" : "/");
+  }
+
+  return {
+    user: { ...supabaseUser, roles },
+    activeRole,
+  };
+}
+
+function ensureActiveRole(
+  preferred: SessionRole,
+  roles: SessionRole[],
+  cookieStore: ReturnType<typeof cookies>,
+): SessionRole {
+  const stored = cookieStore.get(ACTIVE_ROLE_COOKIE)?.value as SessionRole | undefined;
+  if (stored && roles.includes(stored)) {
+    return stored;
+  }
+  const nextRole = roles.includes(preferred)
+    ? preferred
+    : roles[0] ?? preferred;
+  setActiveRoleCookie(nextRole, cookieStore);
+  return nextRole;
+}
+
+function setActiveRoleCookie(
+  role: SessionRole,
+  cookieStore: ReturnType<typeof cookies>,
+) {
+  cookieStore.set({
+    name: ACTIVE_ROLE_COOKIE,
+    value: role,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 30,
+    path: "/",
+  });
 }
 
 export default async function AppLayout({
@@ -63,7 +90,7 @@ export default async function AppLayout({
 }: {
   children: ReactNode;
 }) {
-  const user = await requireSession();
+  const session = await requireOwnerSession();
 
   return (
     <section className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
@@ -89,11 +116,17 @@ export default async function AppLayout({
               Home
             </Link>
           </nav>
-          <div className="text-right">
-            <p className="font-medium text-slate-700">
-              {user.email ?? "Signed in"}
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-3">
+              <RoleSwitcher roles={session.user.roles} activeRole={session.activeRole} />
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                Landlord
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              {session.user.email ?? "Signed in"}
             </p>
-            <p className="text-xs text-slate-400">Supabase Admin</p>
+            <p className="text-xs text-slate-400">Supabase Account</p>
           </div>
         </div>
       </header>

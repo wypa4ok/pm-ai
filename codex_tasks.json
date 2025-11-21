@@ -777,5 +777,205 @@
     "depends_on": [
       "T10_logging"
     ]
+  },
+  {
+    "id": "T14_roles_routing_gate",
+    "title": "Role-aware routing (OWNER vs TENANT)",
+    "desc": "Add middleware to read Supabase JWT, fetch user role, and route to /app (landlord) or /tenant (tenant). Provide a switcher if an account has multiple roles.",
+    "files": ["apps/web/src/middleware.ts","apps/web/src/server/session/role.ts","apps/web/src/app/(tenant)/layout.tsx","apps/web/src/app/(app)/layout.tsx"],
+    "depends_on": ["T2_auth_single_admin","T12_auth_jwt_middleware"]
+  },
+  {
+    "id": "T14_schema_tenant_link",
+    "title": "Schema: link tenants to Supabase users",
+    "desc": "Add tenants.user_id (nullable), unique when set; add tickets.tenant_user_id FK; backfill existing tenants with null; indexes for tenants(user_id) and tickets(tenant_user_id).",
+    "files": ["prisma/schema.prisma"],
+    "cmd": ["npx prisma migrate dev --name tenant_user_link"],
+    "depends_on": ["T12_users_roles_migrate"]
+  },
+  {
+    "id": "T14_rls_enable_tenants",
+    "title": "Enable RLS (tenant-safe policies)",
+    "desc": "Enable RLS for tenants, tickets, messages with policies: OWNER can read/write all owned rows (owner_user_id); TENANT can read/write rows where tickets.tenant_user_id = auth.uid(); storage paths scoped to user.",
+    "files": ["db/sql/rls_policies.sql"],
+    "depends_on": ["T14_schema_tenant_link","T12_tests_contract"]
+  },
+  {
+    "id": "T14_invite_flow_owner",
+    "title": "Owner invites tenant (magic link)",
+    "desc": "Owner enters tenant name/email/unit; creates tenant row and sends Supabase magic link via Gmail with invite token to bind user_id on first login.",
+    "files": ["apps/web/src/app/(app)/tenants/page.tsx","apps/web/src/app/api/v1/tenants/invite/route.ts","src/server/integrations/invite-email.ts"],
+    "depends_on": ["T4_gmail_outbound","T1_db_helpers","T12_api_versioning"]
+  },
+  {
+    "id": "T14_invite_accept",
+    "title": "Tenant accepts invite → account binding",
+    "desc": "Public route captures invite token after Supabase magic-link login; sets tenants.user_id and migrates any existing tickets to tenant_user_id.",
+    "files": ["apps/web/src/app/invite/accept/page.tsx","apps/web/src/app/api/v1/tenants/accept/route.ts"],
+    "depends_on": ["T14_invite_flow_owner","T2_auth_single_admin"]
+  },
+  {
+    "id": "T14_tenant_shell_nav",
+    "title": "Tenant cabinet shell + nav",
+    "desc": "Create /tenant with sidebar (Tickets, New Ticket, Profile). Shared header shows unit & address.",
+    "files": ["apps/web/src/app/tenant/layout.tsx","apps/web/src/app/tenant/page.tsx","apps/web/src/app/tenant/components/Nav.tsx"],
+    "depends_on": ["T14_roles_routing_gate"]
+  },
+  {
+    "id": "T14_tenant_tickets_list",
+    "title": "Tenant: tickets list",
+    "desc": "List tenant's tickets with status chips, last update, search by keyword; uses /v1/tickets with server-side scoping.",
+    "files": ["apps/web/src/app/tenant/tickets/page.tsx","packages/client/index.ts"],
+    "depends_on": ["T14_tenant_shell_nav","T12_client_sdk","T12_api_tickets","T14_rls_enable_tenants"]
+  },
+  {
+    "id": "T14_tenant_ticket_detail",
+    "title": "Tenant: ticket detail + timeline",
+    "desc": "Show status, summary, timeline messages (tenant+owner/agent), attachments, and current contractor state (read-only).",
+    "files": ["apps/web/src/app/tenant/tickets/[id]/page.tsx","apps/web/src/app/tenant/components/Timeline.tsx"],
+    "depends_on": ["T14_tenant_tickets_list","T12_api_messages"]
+  },
+  {
+    "id": "T14_tenant_new_ticket",
+    "title": "Tenant: create ticket + uploads",
+    "desc": "Form for summary/description, category, photos. Uses /v1/uploads/sign + /v1/tickets + initial /v1/messages.",
+    "files": ["apps/web/src/app/tenant/tickets/new/page.tsx"],
+    "depends_on": ["T14_tenant_shell_nav","T12_signed_uploads","T12_api_tickets","T12_api_messages"]
+  },
+  {
+    "id": "T14_tenant_reply",
+    "title": "Tenant: reply on ticket",
+    "desc": "Tenant can add a message and photos to existing ticket; uses /v1/messages.",
+    "files": ["apps/web/src/app/tenant/tickets/[id]/components/ReplyBox.tsx"],
+    "depends_on": ["T14_tenant_ticket_detail","T12_api_messages"]
+  },
+  {
+    "id": "T14_tenant_profile",
+    "title": "Tenant: profile & unit info",
+    "desc": "Read-only view of unit address and contact; allow tenant to update phone/WhatsApp (stored in tenants table).",
+    "files": ["apps/web/src/app/tenant/profile/page.tsx","src/server/db.ts"],
+    "depends_on": ["T14_tenant_shell_nav","T1_db_helpers"]
+  },
+  {
+    "id": "T14_public_intake_to_login",
+    "title": "Convert public intake to login-first",
+    "desc": "Gate former /intake behind sign-in; if not invited, allow request-invite that emails owner with tenant details.",
+    "files": ["apps/web/src/app/intake/page.tsx","apps/web/src/app/api/public/intake/route.ts"],
+    "depends_on": ["T13_tenant_intake_form","T14_invite_flow_owner"]
+  },
+  {
+    "id": "T14_notifications_tenant",
+    "title": "Notify tenant on status changes/replies",
+    "desc": "Worker watches message_events: when owner replies or ticket status changes, email tenant; later can add push.",
+    "files": ["apps/worker/src/notify.ts","src/server/events/consumer.ts"],
+    "depends_on": ["T12_event_bus","T4_gmail_outbound","T14_schema_tenant_link"]
+  },
+  {
+    "id": "T14_owner_visibility_controls",
+    "title": "Owner visibility controls per message",
+    "desc": "Allow marking internal notes hidden from tenant; RLS + UI badge; messages.visibility enum {public, internal}.",
+    "files": ["prisma/schema.prisma","apps/web/src/app/(app)/components/Timeline.tsx"],
+    "cmd": ["npx prisma migrate dev --name message_visibility"],
+    "depends_on": ["T7_ui_ticket_detail","T14_rls_enable_tenants"]
+  },
+  {
+    "id": "T14_tenant_rate_limits",
+    "title": "Tenant-specific API rate limiting",
+    "desc": "Rate limit create-message and create-ticket from TENANT role (e.g., 20/min) with friendly error.",
+    "files": ["src/server/api/middleware/rate-limit.ts"],
+    "depends_on": ["T12_rate_limit","T14_roles_routing_gate"]
+  },
+  {
+    "id": "T14_tenant_copy_and_theme",
+    "title": "Tenant-facing copy & theme",
+    "desc": "Adjust headings, empty states, and Tailwind theme tokens for tenant UI; ensure dark-mode parity.",
+    "files": ["apps/web/src/app/tenant/**/*","apps/web/tailwind.config.ts"],
+    "depends_on": ["T14_tenant_shell_nav","T13_darkmode_a11y"]
+  },
+  {
+    "id": "T14_e2e_role_boundary_tests",
+    "title": "E2E tests: role boundaries",
+    "desc": "Ensure TENANT cannot see other tenants’ tickets or internal messages; OWNER has full access.",
+    "files": ["tests/e2e.roles.spec.ts"],
+    "depends_on": ["T14_rls_enable_tenants","T12_tests_contract"]
+  },
+  {
+    "id": "T14_docs_tenant_portal",
+    "title": "Docs: tenant portal & invite flow",
+    "desc": "How to invite tenants, what they can do, how auth/routing works, and how to revoke access.",
+    "files": ["docs/tenant-portal.md"],
+    "depends_on": ["T14_invite_flow_owner","T14_tenant_shell_nav","T14_rls_enable_tenants"]
+  },
+  {
+    "id": "T15_schema_tenancies",
+    "title": "Schema: tenancies (unit ↔ tenants, dates, primary contact)",
+    "desc": "Add table tenancies(id, unit_id, start_date, end_date null, notes); join table tenancy_members(tenancy_id, tenant_id, is_primary boolean). Add tickets.tenancy_id nullable. Indexes: tenancies(unit_id), tenancy_members(tenant_id), tickets(tenancy_id).",
+    "files": ["prisma/schema.prisma"],
+    "cmd": ["npx prisma migrate dev --name tenancies_core"],
+    "depends_on": ["T1_prisma_migrate","T14_schema_tenant_link"]
+  },
+  {
+    "id": "T15_api_tenancies_crud",
+    "title": "/v1/tenancies CRUD (owner-only)",
+    "desc": "Endpoints: GET list (by unit, active), POST create (unit_id, members[], start_date), PATCH/:id (end_date, members), GET/:id. Enforce OWNER role; RLS-friendly.",
+    "files": ["apps/web/src/app/api/v1/tenancies/route.ts","apps/web/src/app/api/v1/tenancies/[id]/route.ts"],
+    "depends_on": ["T12_api_versioning","T12_auth_jwt_middleware","T15_schema_tenancies"]
+  },
+  {
+    "id": "T15_ui_tenancies_section",
+    "title": "Landlord UI: Tenancies list + detail",
+    "desc": "Add /app/tenancies with table (unit, primary tenant, active/ended) and detail page for members, dates, notes.",
+    "files": ["apps/web/src/app/(app)/tenancies/page.tsx","apps/web/src/app/(app)/tenancies/[id]/page.tsx","apps/web/src/app/(app)/components/TenancyTable.tsx"],
+    "depends_on": ["T2_auth_single_admin","T15_api_tenancies_crud"]
+  },
+  {
+    "id": "T15_ui_tenant_add_invite",
+    "title": "Add tenant to tenancy + send invite",
+    "desc": "In tenancy detail, allow adding tenant by name/email; creates tenant row if missing; calls invite API to send magic-link.",
+    "files": ["apps/web/src/app/(app)/tenancies/[id]/components/AddTenant.tsx","apps/web/src/app/api/v1/tenancies/[id]/members/route.ts"],
+    "depends_on": ["T15_ui_tenancies_section","T14_invite_flow_owner","T1_db_helpers"]
+  },
+  {
+    "id": "T15_inbox_filter_by_tenant",
+    "title": "Inbox filters: by tenant (user/email/tenant/tenancy)",
+    "desc": "Add multi-source tenant filter to tickets list; updates query params and server query. UX: typeahead by tenant name/email.",
+    "files": ["apps/web/src/app/(app)/tickets/page.tsx","apps/web/src/app/(app)/components/TicketTable.tsx"],
+    "depends_on": ["T7_ui_inbox","T1_db_helpers"]
+  },
+  {
+    "id": "T15_api_tickets_filter_tenant",
+    "title": "API: /v1/tickets supports tenant filters",
+    "desc": "Extend /v1/tickets to accept tenant_id, tenancy_id, tenant_email, tenant_user_id. Server enforces OWNER scope and joins to tenants/tenancies.",
+    "files": ["apps/web/src/app/api/v1/tickets/route.ts"],
+    "depends_on": ["T12_api_tickets","T15_schema_tenancies"]
+  },
+  {
+    "id": "T15_ui_ticket_create_link_tenancy",
+    "title": "Landlord: create ticket and link to tenancy",
+    "desc": "Add button in Tenancy detail and in Inbox: opens modal to create ticket (summary, category, initial message, attachments) and sets tickets.tenancy_id + tenant_user_id (if bound).",
+    "files": ["apps/web/src/app/(app)/tenancies/[id]/components/CreateTicketModal.tsx","apps/web/src/app/(app)/components/TicketCreateButton.tsx"],
+    "depends_on": ["T15_ui_tenancies_section","T12_signed_uploads","T12_api_tickets","T12_api_messages"]
+  },
+  {
+    "id": "T15_notify_tenant_on_owner_ticket_create",
+    "title": "Notify tenant when owner creates a ticket for them",
+    "desc": "Worker watches message_events for owner-created tickets; if tenancy has a primary tenant with email/user_id, send an email acknowledgment with ticket link.",
+    "files": ["apps/worker/src/notify.ts","src/server/events/consumer.ts"],
+    "depends_on": ["T12_event_bus","T4_gmail_outbound","T15_schema_tenancies"]
+  },
+  {
+    "id": "T15_rls_tenancies_policies",
+    "title": "RLS: enforce tenancy scoping",
+    "desc": "Policies: OWNER can read/write tenancies they own via units.owner_user_id; TENANT can read tenancies where they are a member; tickets.tenancy_id inherits visibility. Add indexes used in predicates.",
+    "files": ["db/sql/rls_policies.sql"],
+    "depends_on": ["T14_rls_enable_tenants","T15_schema_tenancies"]
+  },
+  {
+    "id": "T15_client_sdk_update",
+    "title": "Regenerate client SDK for new endpoints/filters",
+    "desc": "Update OpenAPI: /v1/tenancies*, extended /v1/tickets (tenant filters). Regenerate packages/client.",
+    "files": ["openapi/openapi.yaml","packages/client/index.ts"],
+    "cmd": ["npx openapi-typescript openapi/openapi.yaml -o packages/client/index.ts"],
+    "depends_on": ["T15_api_tenancies_crud","T15_api_tickets_filter_tenant"]
   }
 ]

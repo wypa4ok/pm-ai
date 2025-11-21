@@ -2,6 +2,7 @@ import http from "node:http";
 import { setInterval } from "node:timers";
 import { pino } from "pino";
 import { runGmailPoll } from "./jobs/gmail-poll";
+import { runNotifyPoll } from "./notify";
 
 const logger = pino({
   name: "worker",
@@ -43,6 +44,11 @@ server.listen(port, () => {
   setInterval(() => {
     runGmailPoll(logger);
   }, pollInterval).unref();
+
+  const notifyInterval = Number(process.env.NOTIFY_POLL_INTERVAL_MS ?? 300000);
+  setInterval(() => {
+    runNotifyPoll().catch((error) => logger.error({ error }, "notify poll failed"));
+  }, notifyInterval).unref();
 });
 
 const shutdown = (signal: NodeJS.Signals) => {

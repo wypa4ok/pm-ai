@@ -1,0 +1,92 @@
+import { NextResponse, type NextRequest } from "next/server";
+import {
+  ACTIVE_ROLE_COOKIE,
+  deriveRoles,
+  fetchSupabaseUser,
+  type SessionRole,
+} from "./server/session/role";
+
+const OWNER_HOME = "/tickets";
+const TENANT_HOME = "/tenant";
+const LANDLORD_PATHS = ["/tickets", "/contractors", "/settings", "/app"];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  const accessToken = request.cookies.get("sb-access-token")?.value;
+  if (!accessToken) {
+    return NextResponse.next();
+  }
+
+  const user = await fetchSupabaseUser(accessToken);
+  if (!user) {
+    return NextResponse.next();
+  }
+
+  const roles = deriveRoles(user);
+  const activeRole = resolveActiveRoleFromCookie(
+    roles,
+    request.cookies.get(ACTIVE_ROLE_COOKIE)?.value,
+  );
+
+  if (pathname === "/" || pathname === "/app") {
+    const url = request.nextUrl.clone();
+    url.pathname = activeRole === "TENANT" ? TENANT_HOME : OWNER_HOME;
+    return NextResponse.redirect(url);
+  }
+
+  if (isTenantPath(pathname) && !roles.includes("TENANT")) {
+    const url = request.nextUrl.clone();
+    url.pathname = OWNER_HOME;
+    return NextResponse.redirect(url);
+  }
+
+  if (isLandlordPath(pathname) && !roles.includes("OWNER")) {
+    const url = request.nextUrl.clone();
+    url.pathname = TENANT_HOME;
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
+}
+
+function resolveActiveRoleFromCookie(
+  roles: SessionRole[],
+  stored?: string,
+): SessionRole {
+  if (stored && roles.includes(stored as SessionRole)) {
+    return stored as SessionRole;
+  }
+  if (roles.includes("OWNER")) return "OWNER";
+  if (roles.includes("TENANT")) return "TENANT";
+  return roles[0] ?? "OWNER";
+}
+
+function isPublicPath(pathname: string) {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/api") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/login"
+  );
+}
+
+function isTenantPath(pathname: string) {
+  return pathname === "/tenant" || pathname.startsWith("/tenant/");
+}
+
+function isLandlordPath(pathname: string) {
+  if (pathname === "/") return true;
+  return LANDLORD_PATHS.some(
+    (segment) => pathname === segment || pathname.startsWith(`${segment}/`),
+  );
+}
+
+export const config = {
+  matcher: ["/((?!api|_next|static|.*\\..*).*)"],
+};
