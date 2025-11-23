@@ -65,13 +65,13 @@ async function requireTenantSession(): Promise<{
   const roles = deriveRoles(supabaseUser);
   if (!roles.includes("TENANT")) {
     if (roles.includes("OWNER")) {
-      ensureActiveRole("OWNER", roles, cookieStore);
       redirect("/tickets");
     }
     redirect("/login?error=Tenant%20access%20required");
   }
 
-  const activeRole = ensureActiveRole("TENANT", roles, cookieStore);
+  const cookieStore2 = cookies();
+  const activeRole = ensureActiveRole("TENANT", roles, cookieStore2);
   if (activeRole !== "TENANT") {
     redirect(activeRole === "OWNER" ? "/tickets" : "/");
   }
@@ -91,17 +91,10 @@ function ensureActiveRole(
   if (stored && roles.includes(stored)) {
     return stored;
   }
+  // Return the preferred role without setting cookie
+  // Cookie will be set by middleware or on first login
   const nextRole = roles.includes(preferred)
     ? preferred
     : roles[0] ?? preferred;
-  cookieStore.set({
-    name: ACTIVE_ROLE_COOKIE,
-    value: nextRole,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
   return nextRole;
 }

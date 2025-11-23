@@ -105,7 +105,7 @@ CREATE POLICY "messages_tenant_read" ON public.messages
   FOR SELECT
   USING (
     auth.role() = 'service_role'
-    OR tenant_user_id = auth.uid()
+    OR (tenant_user_id = auth.uid() AND visibility = 'PUBLIC')
   );
 
 DROP POLICY IF EXISTS "messages_tenant_insert" ON public.messages;

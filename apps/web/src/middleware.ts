@@ -33,7 +33,8 @@ export async function middleware(request: NextRequest) {
     request.cookies.get(ACTIVE_ROLE_COOKIE)?.value,
   );
 
-  if (pathname === "/" || pathname === "/app") {
+  // Allow "/" to be accessed directly - it has its own dashboard page
+  if (pathname === "/app") {
     const url = request.nextUrl.clone();
     url.pathname = activeRole === "TENANT" ? TENANT_HOME : OWNER_HOME;
     return NextResponse.redirect(url);
@@ -81,7 +82,8 @@ function isTenantPath(pathname: string) {
 }
 
 function isLandlordPath(pathname: string) {
-  if (pathname === "/") return true;
+  // "/" is accessible to all roles (has its own dashboard page)
+  if (pathname === "/") return false;
   return LANDLORD_PATHS.some(
     (segment) => pathname === segment || pathname.startsWith(`${segment}/`),
   );

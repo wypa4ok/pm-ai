@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { RoleSwitcher } from "../../components/RoleSwitcher";
+import { RoleSwitcher } from "../components/RoleSwitcher";
 import {
   ACTIVE_ROLE_COOKIE,
   deriveRoles,
@@ -37,7 +37,6 @@ async function requireOwnerSession(): Promise<{
   const roles = deriveRoles(supabaseUser);
   if (!roles.includes("OWNER")) {
     if (roles.includes("TENANT")) {
-      setActiveRoleCookie("TENANT", cookieStore);
       redirect("/tenant");
     }
     redirect("/login?error=Owner%20access%20required");
@@ -63,26 +62,12 @@ function ensureActiveRole(
   if (stored && roles.includes(stored)) {
     return stored;
   }
+  // Return the preferred role without setting cookie
+  // Cookie will be set by middleware or on first login
   const nextRole = roles.includes(preferred)
     ? preferred
     : roles[0] ?? preferred;
-  setActiveRoleCookie(nextRole, cookieStore);
   return nextRole;
-}
-
-function setActiveRoleCookie(
-  role: SessionRole,
-  cookieStore: ReturnType<typeof cookies>,
-) {
-  cookieStore.set({
-    name: ACTIVE_ROLE_COOKIE,
-    value: role,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
 }
 
 export default async function AppLayout({
@@ -103,17 +88,20 @@ export default async function AppLayout({
         </div>
         <div className="flex items-center gap-6 text-sm text-slate-600">
           <nav className="flex items-center gap-4">
+            <Link href="/" className="hover:text-slate-900">
+              Home
+            </Link>
             <Link href="/tickets" className="hover:text-slate-900">
               Tickets
+            </Link>
+            <Link href="/tenants" className="hover:text-slate-900">
+              Tenants
             </Link>
             <Link href="/contractors" className="hover:text-slate-900">
               Contractors
             </Link>
             <Link href="/settings" className="hover:text-slate-900">
               Settings
-            </Link>
-            <Link href="/" className="hover:text-slate-900">
-              Home
             </Link>
           </nav>
           <div className="flex flex-col items-end">

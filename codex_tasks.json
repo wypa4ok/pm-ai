@@ -857,6 +857,7 @@
     "depends_on": ["T14_tenant_shell_nav","T1_db_helpers"]
   },
   {
+    
     "id": "T14_public_intake_to_login",
     "title": "Convert public intake to login-first",
     "desc": "Gate former /intake behind sign-in; if not invited, allow request-invite that emails owner with tenant details.",

@@ -50,6 +50,11 @@ enum MessageChannel {
   INTERNAL
 }
 
+enum MessageVisibility {
+  PUBLIC
+  INTERNAL
+}
+
 enum ContractorCategory {
   PLUMBING
   ELECTRICAL
@@ -114,8 +119,9 @@ model Tenant {
   userId    String?  @unique @map("user_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  tickets   Ticket[]
-  linkedTickets Ticket[] @relation("TenantAccount")
+  tickets        Ticket[]
+  linkedTickets  Ticket[]      @relation("TenantAccount")
+  invites        TenantInvite[]
 
   @@index([unitId])
   @@index([email])
@@ -162,21 +168,22 @@ model Ticket {
 }
 
 model Message {
-  id           String           @id @default(uuid()) @db.Uuid
-  ticketId     String           @map("ticket_id") @db.Uuid
-  authorId     String?          @map("author_id") @db.Uuid
-  ownerUserId  String           @map("owner_user_id") @db.Uuid
-  tenantUserId String?          @map("tenant_user_id") @db.Uuid
+  id           String              @id @default(uuid()) @db.Uuid
+  ticketId     String              @map("ticket_id") @db.Uuid
+  authorId     String?             @map("author_id") @db.Uuid
+  ownerUserId  String              @map("owner_user_id") @db.Uuid
+  tenantUserId String?             @map("tenant_user_id") @db.Uuid
   direction    MessageDirection
   channel      MessageChannel
+  visibility   MessageVisibility   @default(PUBLIC)
   subject      String?
-  bodyText     String?          @map("body_text")
-  bodyHtml     String?          @map("body_html")
+  bodyText     String?             @map("body_text")
+  bodyHtml     String?             @map("body_html")
   attachments  Json?
-  externalId   String?          @map("external_id")
+  externalId   String?             @map("external_id")
   metadata     Json?
-  sentAt       DateTime         @default(now()) @map("sent_at")
-  createdAt    DateTime         @default(now()) @map("created_at")
+  sentAt       DateTime            @default(now()) @map("sent_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author User?  @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: SetNull)
@@ -224,4 +231,20 @@ model AgentEvent {
   @@index([ticketId, createdAt])
   @@index([type])
   @@map("agent_events")
+}
+
+model TenantInvite {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  ownerUserId  String   @map("owner_user_id") @db.Uuid
+  token        String   @unique
+  expiresAt    DateTime @map("expires_at")
+  claimedAt    DateTime? @map("claimed_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([ownerUserId])
+  @@map("tenant_invites")
 }

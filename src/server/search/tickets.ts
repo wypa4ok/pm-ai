@@ -7,10 +7,11 @@ type TicketFilters = {
   search?: string;
   limit?: number;
   ownerUserId?: string;
+  tenantUserId?: string;
 };
 
 export async function searchTickets(filters: TicketFilters) {
-  const { status, category, channel, ownerUserId } = filters;
+  const { status, category, channel, ownerUserId, tenantUserId } = filters;
   const limit = filters.limit ?? 50;
   const searchTerm = normalizeSearch(filters.search);
 
@@ -19,6 +20,7 @@ export async function searchTickets(filters: TicketFilters) {
     category: category || undefined,
     channel: channel || undefined,
     ownerUserId: ownerUserId || undefined,
+    tenantUserId: tenantUserId || undefined,
   };
 
   if (!searchTerm) {
