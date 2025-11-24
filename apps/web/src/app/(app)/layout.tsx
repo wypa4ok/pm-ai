@@ -134,7 +134,6 @@ export default async function AppLayout({
               </span>
             </div>
             <span className="font-medium">{session.user.email ?? "Signed in"}</span>
-            <span className="text-xs text-slate-300">Full property access</span>
           </div>
           <form action={logoutAction}>
             <button

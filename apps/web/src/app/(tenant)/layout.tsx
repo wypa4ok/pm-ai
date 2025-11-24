@@ -66,7 +66,6 @@ export default async function TenantGroupLayout({
               </span>
             </div>
             <span className="font-medium">{session.user.email ?? "Signed in"}</span>
-            <span className="text-xs text-slate-300">Access limited to your tickets</span>
           </div>
           <form action={logoutAction}>
             <button

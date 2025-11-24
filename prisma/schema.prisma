@@ -90,18 +90,19 @@ model User {
 }
 
 model Unit {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String     @id @default(uuid()) @db.Uuid
   name       String
-  address1   String   @map("address_1")
-  address2   String?  @map("address_2")
+  address1   String     @map("address_1")
+  address2   String?    @map("address_2")
   city       String
   state      String
-  postalCode String   @map("postal_code")
+  postalCode String     @map("postal_code")
   notes      String?
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
   tenants    Tenant[]
   tickets    Ticket[]
+  tenancies  Tenancy[]
 
   @@index([city, state])
   @@map("units")
@@ -119,9 +120,10 @@ model Tenant {
   userId    String?  @unique @map("user_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  tickets        Ticket[]
-  linkedTickets  Ticket[]      @relation("TenantAccount")
-  invites        TenantInvite[]
+  tickets          Ticket[]
+  linkedTickets    Ticket[]        @relation("TenantAccount")
+  invites          TenantInvite[]
+  tenancyMembers   TenancyMember[]
 
   @@index([unitId])
   @@index([email])
@@ -133,6 +135,7 @@ model Ticket {
   id           String         @id @default(uuid()) @db.Uuid
   unitId       String?        @map("unit_id") @db.Uuid
   tenantId     String?        @map("tenant_id") @db.Uuid
+  tenancyId    String?        @map("tenancy_id") @db.Uuid
   assigneeId   String?        @map("assignee_id") @db.Uuid
   ownerUserId  String         @map("owner_user_id") @db.Uuid
   tenantUserId String?        @map("tenant_user_id") @db.Uuid
@@ -150,20 +153,24 @@ model Ticket {
   updatedAt    DateTime       @updatedAt @map("updated_at")
   searchVector Unsupported("tsvector")? @map("search_vector")
 
-  owner       User         @relation("TicketOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
-  unit        Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  tenantAccount Tenant?    @relation("TenantAccount", fields: [tenantUserId], references: [userId], onDelete: SetNull)
-  assignee    User?        @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  messages    Message[]
-  agentEvents AgentEvent[]
+  owner         User         @relation("TicketOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  unit          Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  tenant        Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenancy       Tenancy?     @relation(fields: [tenancyId], references: [id], onDelete: SetNull)
+  tenantAccount Tenant?      @relation("TenantAccount", fields: [tenantUserId], references: [userId], onDelete: SetNull)
+  assignee      User?        @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages      Message[]
+  agentEvents   AgentEvent[]
 
   @@index([unitId])
   @@index([tenantId])
+  @@index([tenancyId])
   @@index([assigneeId])
   @@index([ownerUserId])
   @@index([tenantUserId])
   @@index([status, priority])
+  @@index([searchVector])
+  @@index([subject])
   @@map("tickets")
 }
 
@@ -247,4 +254,38 @@ model TenantInvite {
   @@index([tenantId])
   @@index([ownerUserId])
   @@map("tenant_invites")
+}
+
+model Tenancy {
+  id        String   @id @default(uuid()) @db.Uuid
+  unitId    String   @map("unit_id") @db.Uuid
+  startDate DateTime @map("start_date")
+  endDate   DateTime? @map("end_date")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  unit    Unit              @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  members TenancyMember[]
+  tickets Ticket[]
+
+  @@index([unitId])
+  @@index([startDate, endDate])
+  @@map("tenancies")
+}
+
+model TenancyMember {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenancyId  String   @map("tenancy_id") @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenancy Tenancy @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenancyId, tenantId])
+  @@index([tenancyId])
+  @@index([tenantId])
+  @@map("tenancy_members")
 }
