@@ -29,6 +29,10 @@ export class GmailEmailClient implements EmailClient {
 
   constructor(private readonly options: GmailEmailClientOptions) {
     this.userId = options.userId ?? "me";
+    console.log("GmailEmailClient initialized for userId:", this.userId);
+    console.log("Refresh token:", this.options.refreshToken);
+    console.log("Client ID:", this.options.clientId);
+    console.log("Client Secret:", this.options.clientSecret);
   }
 
   async listInbound(options: EmailListOptions = {}): Promise<EmailMessage[]> {
