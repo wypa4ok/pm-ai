@@ -44,13 +44,22 @@ export async function fetchSupabaseUser(
 }
 
 export function deriveRoles(user?: SupabaseAuthUser | null): SessionRole[] {
+  if (!user) return ["OWNER"];
+
+  // Check metadata for explicitly set roles
   const fromUser = extractRoles(user?.user_metadata);
   const fromApp = extractRoles(user?.app_metadata);
-  const roles = [...new Set([...fromUser, ...fromApp])];
-  if (roles.length === 0) {
-    return ["OWNER"];
+  const metadataRoles = [...new Set([...fromUser, ...fromApp])];
+
+  // If roles are explicitly set in metadata, use those
+  if (metadataRoles.length > 0) {
+    return metadataRoles;
   }
-  return roles;
+
+  // Default to OWNER
+  // Note: For actual role detection based on database relationships,
+  // use the /api/v1/auth/roles endpoint which can access Prisma
+  return ["OWNER"];
 }
 
 function extractRoles(

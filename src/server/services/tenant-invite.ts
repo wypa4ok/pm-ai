@@ -53,13 +53,18 @@ export async function createTenantInvite(input: InviteInput) {
 
   const inviteLink = buildInviteLink(tenant.id, token);
 
-  await sendTenantInviteEmail({
-    email,
-    tenantName: `${tenant.firstName} ${tenant.lastName}`.trim(),
-    inviteLink,
-    expiresAt,
-    ownerEmail: input.ownerEmail,
-  });
+  // Try to send email, but don't fail if it doesn't work
+  try {
+    await sendTenantInviteEmail({
+      email,
+      tenantName: `${tenant.firstName} ${tenant.lastName}`.trim(),
+      inviteLink,
+      expiresAt,
+      ownerEmail: input.ownerEmail,
+    });
+  } catch (error) {
+    console.error("Email send failed, but invite was created:", error);
+  }
 
   return { tenant, inviteLink, expiresAt };
 }

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { fetchSupabaseUser } from "../../../../server/session/role";
-import { prisma } from "../../../../../../src/server/db";
+import { prisma } from "../../../../../../../src/server/db";
 import TenantProfileForm from "../components/TenantProfileForm";
 
 export default async function TenantProfilePage() {

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { searchTickets } from "../../../../../../src/server/search/tickets";
+import { searchTickets } from "../../../../../../../src/server/search/tickets";
 import { fetchSupabaseUser } from "../../../../server/session/role";
 import TenantTicketTable from "../components/TenantTicketTable";
 

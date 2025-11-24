@@ -21,43 +21,30 @@ export default function AcceptInvitePage() {
 
     const processInvite = async () => {
       try {
-        // Get the user ID from Supabase session
-        const accessTokenCookie = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("sb-access-token="));
+        // First, fetch the invite details to get the tenant's email
+        const inviteCheckResponse = await fetch(
+          `/api/v1/tenants/invite-info?tenantId=${tenantId}&token=${token}`,
+        );
 
-        if (!accessTokenCookie) {
-          // Not logged in, redirect to Supabase auth with redirect back
-          const redirectUrl = `${window.location.origin}/invite/accept?tenantId=${tenantId}&token=${token}`;
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        let tenantEmail = "";
+        if (inviteCheckResponse.ok) {
+          const inviteData = await inviteCheckResponse.json();
+          tenantEmail = inviteData.email || "";
+        }
 
-          if (supabaseUrl) {
-            window.location.href = `${supabaseUrl}/auth/v1/authorize?redirect_to=${encodeURIComponent(redirectUrl)}`;
-          } else {
-            setStatus("error");
-            setMessage("Configuration error. Please contact support.");
-          }
+        // Check if user is logged in by calling our API
+        const checkAuthResponse = await fetch("/api/v1/auth/me");
+
+        if (!checkAuthResponse.ok) {
+          // Not logged in, redirect to signup with tenant email and return URL
+          const returnUrl = encodeURIComponent(`/invite/accept?tenantId=${tenantId}&token=${token}`);
+          const emailParam = tenantEmail ? `&email=${encodeURIComponent(tenantEmail)}` : "";
+          window.location.href = `/auth/signup?returnUrl=${returnUrl}${emailParam}`;
           return;
         }
 
-        const accessToken = accessTokenCookie.split("=")[1];
-
-        // Fetch user info from Supabase
-        const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!userResponse.ok) {
-          setStatus("error");
-          setMessage("Failed to verify your session. Please try logging in again.");
-          return;
-        }
-
-        const userData = await userResponse.json();
-        const userId = userData.id;
+        const authData = await checkAuthResponse.json();
+        const userId = authData.user.id;
 
         // Accept the invite
         const response = await fetch("/api/v1/tenants/accept", {
@@ -76,7 +63,12 @@ export default function AcceptInvitePage() {
 
         if (!response.ok) {
           setStatus("error");
-          setMessage(data.message || "Failed to accept invite. Please try again.");
+          // Show more detailed error message
+          if (response.status === 403 && data.message?.includes("This invite is for")) {
+            setMessage(data.message);
+          } else {
+            setMessage(data.message || "Failed to accept invite. Please try again.");
+          }
           return;
         }
 

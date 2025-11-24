@@ -16,6 +16,19 @@ type SupabaseUser = {
   user_metadata?: Record<string, unknown>;
 };
 
+async function logoutAction() {
+  "use server";
+
+  const cookieStore = await cookies();
+
+  // Clear all session cookies
+  cookieStore.delete("sb-access-token");
+  cookieStore.delete("sb-refresh-token");
+  cookieStore.delete("active_role");
+
+  redirect("/");
+}
+
 async function requireOwnerSession(): Promise<{
   user: SupabaseUser & { roles: SessionRole[] };
   activeRole: SessionRole;
@@ -78,44 +91,59 @@ export default async function AppLayout({
   const session = await requireOwnerSession();
 
   return (
-    <section className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">Rental Ops Console</p>
-          <h1 className="text-xl font-semibold text-slate-900">
-            Property Management Workspace
-          </h1>
-        </div>
-        <div className="flex items-center gap-6 text-sm text-slate-600">
-          <nav className="flex items-center gap-4">
-            <Link href="/" className="hover:text-slate-900">
-              Home
-            </Link>
-            <Link href="/tickets" className="hover:text-slate-900">
+    <section className="flex min-h-screen flex-col bg-white text-slate-900">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
+        <div className="flex items-center gap-8">
+          <Link href="/home" className="transition hover:opacity-80">
+            <p className="text-xs uppercase tracking-wide text-slate-300">Landlord Portal</p>
+            <h1 className="text-xl font-semibold">Property Management</h1>
+          </Link>
+          <nav className="flex gap-4">
+            <Link
+              href="/tickets"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
               Tickets
             </Link>
-            <Link href="/tenants" className="hover:text-slate-900">
+            <Link
+              href="/tenants"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
               Tenants
             </Link>
-            <Link href="/contractors" className="hover:text-slate-900">
+            <Link
+              href="/contractors"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
               Contractors
             </Link>
-            <Link href="/settings" className="hover:text-slate-900">
+            <Link
+              href="/settings"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
               Settings
             </Link>
           </nav>
-          <div className="flex flex-col items-end">
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end gap-1 text-right text-sm">
             <div className="flex items-center gap-3">
               <RoleSwitcher roles={session.user.roles} activeRole={session.activeRole} />
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+              <span className="rounded-full bg-blue-200/30 px-2 py-0.5 text-xs font-semibold text-blue-50">
                 Landlord
               </span>
             </div>
-            <p className="mt-1 text-sm font-medium text-slate-700">
-              {session.user.email ?? "Signed in"}
-            </p>
-            <p className="text-xs text-slate-400">Supabase Account</p>
+            <span className="font-medium">{session.user.email ?? "Signed in"}</span>
+            <span className="text-xs text-slate-300">Full property access</span>
           </div>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="rounded-md bg-red-500/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition"
+            >
+              Log Out
+            </button>
+          </form>
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>

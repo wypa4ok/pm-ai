@@ -6,9 +6,9 @@ import {
   type SessionRole,
 } from "./server/session/role";
 
-const OWNER_HOME = "/tickets";
+const OWNER_HOME = "/home";
 const TENANT_HOME = "/tenant";
-const LANDLORD_PATHS = ["/tickets", "/contractors", "/settings", "/app"];
+const LANDLORD_PATHS = ["/tickets", "/contractors", "/settings", "/app", "/tenants", "/home"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -73,7 +73,9 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/static") ||
     pathname.startsWith("/api") ||
     pathname === "/favicon.ico" ||
-    pathname === "/login"
+    pathname === "/login" ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/invite/")
   );
 }
 
