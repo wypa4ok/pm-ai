@@ -8,7 +8,7 @@ export default function LandlordHomePage() {
         </p>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:max-w-5xl">
+      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:max-w-6xl">
         <a
           href="/tickets"
           className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-blue-400 hover:bg-white/20"
@@ -28,6 +28,28 @@ export default function LandlordHomePage() {
           </div>
           <p className="text-sm text-slate-300">
             View and manage maintenance requests from your tenants.
+          </p>
+        </a>
+
+        <a
+          href="/tenancies"
+          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-indigo-400 hover:bg-white/20"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white group-hover:text-indigo-300">
+              Tenancies
+            </h2>
+            <svg
+              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+          <p className="text-sm text-slate-300">
+            Manage tenant leases, members, and rental periods.
           </p>
         </a>
 

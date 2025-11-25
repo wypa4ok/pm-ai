@@ -106,6 +106,12 @@ export default async function AppLayout({
               Tickets
             </Link>
             <Link
+              href="/tenancies"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            >
+              Tenancies
+            </Link>
+            <Link
               href="/tenants"
               className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
             >

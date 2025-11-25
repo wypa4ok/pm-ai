@@ -8,7 +8,7 @@ import {
 
 const OWNER_HOME = "/home";
 const TENANT_HOME = "/tenant";
-const LANDLORD_PATHS = ["/tickets", "/contractors", "/settings", "/app", "/tenants", "/home"];
+const LANDLORD_PATHS = ["/tickets", "/tenancies", "/contractors", "/settings", "/app", "/tenants", "/home"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
