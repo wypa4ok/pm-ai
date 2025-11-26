@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../../../../src/server/db";
+import TenantMembersSection from "./components/TenantMembersSection";
 
 export default async function TenancyDetailPage({
   params,
@@ -122,51 +123,10 @@ export default async function TenancyDetailPage({
       </section>
 
       {/* Tenant Members */}
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Tenant Members</h2>
-          <span className="text-sm text-slate-500">
-            {tenancy.members.length} {tenancy.members.length === 1 ? "member" : "members"}
-          </span>
-        </div>
-        <ul className="mt-4 divide-y divide-slate-100">
-          {tenancy.members.map((member) => (
-            <li key={member.id} className="py-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {member.tenant.firstName} {member.tenant.lastName}
-                    </p>
-                    {member.isPrimary && (
-                      <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                        Primary
-                      </span>
-                    )}
-                    {member.tenant.userId && (
-                      <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                        Portal Access
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 space-y-1">
-                    {member.tenant.email && (
-                      <p className="text-xs text-slate-500">
-                        Email: {member.tenant.email}
-                      </p>
-                    )}
-                    {member.tenant.phone && (
-                      <p className="text-xs text-slate-500">
-                        Phone: {member.tenant.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <TenantMembersSection
+        tenancyId={tenancy.id}
+        members={tenancy.members}
+      />
 
       {/* Associated Tickets */}
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
