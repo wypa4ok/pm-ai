@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { errorResponse } from "~/server/api/errors";
 import { withAuth } from "~/server/api/middleware/auth";
-import { prisma } from "~/server/db";
 import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
+import * as unitService from "~/server/services/unit-service";
 
 const createSchema = z.object({
   name: z.string().min(1, "Unit name is required"),
@@ -35,11 +35,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const units = await prisma.unit.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+  const units = await unitService.listUnits();
 
   return NextResponse.json({
     units,
@@ -77,16 +73,14 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
 
-  const unit = await prisma.unit.create({
-    data: {
-      name: data.name,
-      address1: data.address1,
-      address2: data.address2 ?? null,
-      city: data.city,
-      state: data.state,
-      postalCode: data.postalCode,
-      notes: data.notes ?? null,
-    },
+  const unit = await unitService.createUnit({
+    name: data.name,
+    address1: data.address1,
+    address2: data.address2 ?? undefined,
+    city: data.city,
+    state: data.state,
+    postalCode: data.postalCode,
+    notes: data.notes ?? undefined,
   });
 
   return NextResponse.json(

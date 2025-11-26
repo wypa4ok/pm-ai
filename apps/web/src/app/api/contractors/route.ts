@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "../../../../../../src/server/db";
+import * as contractorService from "../../../../../../src/server/services/contractor-service";
 
 const baseSchema = z.object({
   companyName: z.string().min(2),
@@ -25,9 +25,7 @@ const updateSchema = baseSchema.partial().extend({
 });
 
 export async function GET() {
-  const contractors = await prisma.contractor.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const contractors = await contractorService.listContractors();
   return NextResponse.json({ contractors });
 }
 
@@ -42,9 +40,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const contractor = await prisma.contractor.create({
-    data: sanitizePayload(parsed.data),
-  });
+  const contractor = await contractorService.createContractor(parsed.data);
 
   return NextResponse.json({ contractor }, { status: 201 });
 }
@@ -60,51 +56,7 @@ export async function PUT(request: Request) {
     );
   }
 
-  const { id, ...data } = parsed.data;
-
-  const contractor = await prisma.contractor.update({
-    where: { id },
-    data: {
-      ...(data.companyName !== undefined && {
-        companyName: sanitizeString(data.companyName),
-      }),
-      ...(data.contactName !== undefined && {
-        contactName: sanitizeOptionalString(data.contactName),
-      }),
-      ...(data.email !== undefined && { email: sanitizeOptionalString(data.email) }),
-      ...(data.phone !== undefined && { phone: sanitizeOptionalString(data.phone) }),
-      ...(data.category !== undefined && { category: data.category }),
-      ...(data.notes !== undefined && { notes: sanitizeOptionalString(data.notes) }),
-      ...(parsed.data.serviceAreas !== undefined && {
-        serviceAreas: sanitizeServiceAreas(data.serviceAreas ?? []),
-      }),
-    },
-  });
+  const contractor = await contractorService.updateContractor(parsed.data);
 
   return NextResponse.json({ contractor });
-}
-
-function sanitizePayload(data: z.infer<typeof createSchema>) {
-  return {
-    companyName: sanitizeString(data.companyName),
-    contactName: sanitizeOptionalString(data.contactName),
-    email: sanitizeOptionalString(data.email),
-    phone: sanitizeOptionalString(data.phone),
-    category: data.category,
-    serviceAreas: sanitizeServiceAreas(data.serviceAreas ?? []),
-    notes: sanitizeOptionalString(data.notes),
-  };
-}
-
-function sanitizeString(value: string) {
-  return value.trim();
-}
-
-function sanitizeOptionalString(value?: string) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-}
-
-function sanitizeServiceAreas(values: string[]) {
-  return values.map((value) => value.trim()).filter(Boolean);
 }

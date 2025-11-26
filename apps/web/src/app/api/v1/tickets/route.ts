@@ -3,10 +3,9 @@ import { z } from "zod";
 import { TicketCategory, TicketPriority, MessageChannel } from "@prisma/client";
 import { errorResponse } from "../../../../../src/server/api/errors";
 import { withAuth } from "../../../../../src/server/api/middleware/auth";
-import { prisma } from "../../../../../src/server/db";
-import { searchTickets } from "../../../../../src/server/search/tickets";
 import { applyCors } from "../../../../../src/server/api/middleware/cors";
 import { rateLimit } from "../../../../../src/server/api/middleware/rate-limit";
+import * as ticketService from "../../../../../src/server/services/ticket-service";
 
 const createSchema = z.object({
   subject: z.string().min(2),
@@ -35,7 +34,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") ?? undefined;
   const limit = Number(searchParams.get("limit") ?? "50");
 
-  const tickets = await searchTickets({
+  const tickets = await ticketService.listTickets({
     status,
     category,
     channel,
@@ -87,25 +86,15 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
 
-  const ticket = await prisma.ticket.create({
-    data: {
-      subject: data.subject,
-      description: data.description ?? null,
-      category: data.category ?? undefined,
-      priority: data.priority ?? undefined,
-      channel: data.channel ?? undefined,
-      ownerUserId: authed.auth.user.id,
-      tenant: data.tenantId ? { connect: { id: data.tenantId } } : undefined,
-      unit: data.unitId ? { connect: { id: data.unitId } } : undefined,
-    },
-    include: {
-      tenant: true,
-      unit: true,
-      messages: {
-        orderBy: { sentAt: "desc" },
-        take: 1,
-      },
-    },
+  const ticket = await ticketService.createTicket({
+    subject: data.subject,
+    description: data.description,
+    category: data.category,
+    priority: data.priority,
+    channel: data.channel,
+    ownerUserId: authed.auth.user.id,
+    tenantId: data.tenantId,
+    unitId: data.unitId,
   });
 
   return NextResponse.json(
@@ -121,11 +110,6 @@ export async function POST(request: NextRequest) {
         openedAt: ticket.openedAt,
         tenantId: ticket.tenantId,
         unitId: ticket.unitId,
-        latestMessageSnippet:
-          ticket.messages[0]?.snippet ??
-          ticket.messages[0]?.bodyText ??
-          ticket.messages[0]?.bodyHtml ??
-          undefined,
       },
     },
     { status: 201 },

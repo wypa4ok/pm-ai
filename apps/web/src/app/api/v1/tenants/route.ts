@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "~/server/api/errors";
 import { withAuth } from "~/server/api/middleware/auth";
-import { prisma } from "~/server/db";
 import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
+import * as tenancyService from "~/server/services/tenancy-service";
 
 export async function GET(request: NextRequest) {
   const cors = applyCors(request, allowedOrigins());
@@ -24,20 +24,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tenants = await prisma.tenant.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      phone: true,
-      userId: true,
-      createdAt: true,
-    },
-  });
+  const tenants = await tenancyService.listTenants();
 
   return NextResponse.json({
     tenants,

@@ -5,6 +5,7 @@ import { withAuth } from "~/server/api/middleware/auth";
 import { prisma } from "~/server/db";
 import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
+import * as tenancyService from "~/server/services/tenancy-service";
 
 const createSchema = z.object({
   unitId: z.string().uuid(),
@@ -186,85 +187,39 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Ensure only one primary tenant
-  const primaryCount = data.members.filter((m) => m.isPrimary).length;
-  if (primaryCount > 1) {
-    return errorResponse(
-      "invalid_request",
-      "Only one primary tenant is allowed per tenancy",
-      400
-    );
-  }
-
-  // If no primary specified, make the first one primary
-  if (primaryCount === 0 && data.members.length > 0) {
-    data.members[0].isPrimary = true;
-  }
-
-  // Create the tenancy with members
-  const tenancy = await prisma.tenancy.create({
-    data: {
-      unitId: data.unitId,
-      startDate: new Date(data.startDate),
-      endDate: data.endDate ? new Date(data.endDate) : null,
-      notes: data.notes ?? null,
-      members: {
-        create: data.members.map((member) => ({
-          tenantId: member.tenantId,
-          isPrimary: member.isPrimary ?? false,
-        })),
-      },
-    },
-    include: {
-      unit: {
-        select: {
-          id: true,
-          name: true,
-          address1: true,
-          address2: true,
-          city: true,
-          state: true,
-          postalCode: true,
-        },
-      },
-      members: {
-        include: {
-          tenant: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              phone: true,
-              userId: true,
-            },
-          },
-        },
-        orderBy: {
-          isPrimary: "desc",
-        },
-      },
-    },
+  // Create the tenancy with members using the service
+  const tenancy = await tenancyService.createTenancy({
+    unitId: data.unitId,
+    startDate: data.startDate,
+    endDate: data.endDate ?? null,
+    notes: data.notes ?? null,
+    members: data.members.map((m) => ({
+      tenantId: m.tenantId,
+      isPrimary: m.isPrimary ?? false,
+    })),
   });
+
+  // Fetch the created tenancy with includes for the response
+  const tenancyWithDetails = await tenancyService.getTenancyWithDetails(tenancy.id);
 
   return NextResponse.json(
     {
       tenancy: {
-        id: tenancy.id,
-        unitId: tenancy.unitId,
-        unit: tenancy.unit,
-        startDate: tenancy.startDate,
-        endDate: tenancy.endDate,
-        notes: tenancy.notes,
-        members: tenancy.members.map((member) => ({
+        id: tenancyWithDetails!.id,
+        unitId: tenancyWithDetails!.unitId,
+        unit: tenancyWithDetails!.unit,
+        startDate: tenancyWithDetails!.startDate,
+        endDate: tenancyWithDetails!.endDate,
+        notes: tenancyWithDetails!.notes,
+        members: tenancyWithDetails!.members.map((member) => ({
           id: member.id,
           tenantId: member.tenantId,
           isPrimary: member.isPrimary,
           tenant: member.tenant,
         })),
-        isActive: !tenancy.endDate || tenancy.endDate > new Date(),
-        createdAt: tenancy.createdAt,
-        updatedAt: tenancy.updatedAt,
+        isActive: !tenancyWithDetails!.endDate || tenancyWithDetails!.endDate > new Date(),
+        createdAt: tenancyWithDetails!.createdAt,
+        updatedAt: tenancyWithDetails!.updatedAt,
       },
     },
     { status: 201 }
