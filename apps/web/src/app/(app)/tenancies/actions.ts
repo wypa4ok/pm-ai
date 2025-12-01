@@ -54,6 +54,21 @@ export async function createUnit(formData: {
   return { success: true, unit };
 }
 
+export async function createTenant(formData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  unitId?: string;
+}) {
+  await getAuthenticatedOwner();
+
+  const tenant = await tenancyService.createTenant(formData);
+
+  revalidatePath("/tenancies/new");
+  return { success: true, tenant };
+}
+
 export async function getUnitsAndTenants() {
   await getAuthenticatedOwner();
 

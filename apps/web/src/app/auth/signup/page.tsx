@@ -28,83 +28,33 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        // Fall back to server-side sign up
-        const response = await fetch("/api/v1/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, name }),
-        });
-
-        const data = await response.json();
-
-        console.log("Signup API response:", {
-          ok: response.ok,
-          status: response.status,
-          data,
-        });
-
-        if (!response.ok) {
-          throw new Error(data.message || data.error || "Sign up failed");
-        }
-
-        // Check if email confirmation is required
-        if (data.requiresEmailConfirmation) {
-          setSuccess("Account created! Please check your email to confirm your account, then you can log in.");
-          setLoading(false);
-          return;
-        }
-
-        // After successful signup, redirect to return URL or home
-        const returnUrl = searchParams.get("returnUrl");
-        if (returnUrl) {
-          router.push(decodeURIComponent(returnUrl));
-        } else {
-          router.push("/");
-        }
-        return;
-      }
-
-      // Sign up with Supabase directly (if env vars are available)
-      const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+      // Always use server-side signup to ensure cookies are set properly
+      const response = await fetch("/api/v1/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          data: { name },
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
       });
 
-      const signUpData = await signUpResponse.json();
+      const data = await response.json();
 
-      if (!signUpResponse.ok) {
-        throw new Error(signUpData.error_description || signUpData.message || "Sign up failed");
+      console.log("Signup API response:", {
+        ok: response.ok,
+        status: response.status,
+        data,
+      });
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Sign up failed");
       }
 
       // Check if email confirmation is required
-      if (signUpData.user && !signUpData.session) {
-        setError("Please check your email to confirm your account.");
+      if (data.requiresEmailConfirmation) {
+        setSuccess("Account created! Please check your email to confirm your account, then you can log in.");
         setLoading(false);
         return;
       }
 
-      // Set the session cookies via our API
-      if (signUpData.session) {
-        await fetch("/api/v1/auth/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session: signUpData.session }),
-        });
-      }
-
-      // Redirect to return URL or home
+      // After successful signup, redirect to return URL or home
       const returnUrl = searchParams.get("returnUrl");
       if (returnUrl) {
         router.push(decodeURIComponent(returnUrl));

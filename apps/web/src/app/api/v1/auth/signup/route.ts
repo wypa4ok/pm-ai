@@ -29,9 +29,10 @@ export async function POST(request: NextRequest) {
     const { email, password, name } = parsed.data;
 
     const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
       return errorResponse(
         "configuration_error",
         "Authentication service not configured",
@@ -39,17 +40,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sign up with Supabase
-    const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+    // Create user with Supabase Admin API
+    const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: supabaseAnonKey,
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
       },
       body: JSON.stringify({
         email,
         password,
-        data: name ? { name } : {},
+        email_confirm: true, // Auto-confirm email since we have confirmation disabled
+        user_metadata: name ? { name } : {},
       }),
     });
 
@@ -60,11 +63,68 @@ export async function POST(request: NextRequest) {
       status: signUpResponse.status,
       hasUser: !!signUpData.user,
       hasSession: !!signUpData.session,
+      confirmedAt: signUpData.user?.confirmed_at,
       error: signUpData.error,
       errorDescription: signUpData.error_description,
+      fullResponse: JSON.stringify(signUpData, null, 2),
     });
 
     if (!signUpResponse.ok) {
+      // If user already exists, try to sign them in instead
+      if (signUpData.error_code === "email_exists") {
+        console.log("User already exists, attempting to sign in instead");
+        const signInResponse = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const signInData = await signInResponse.json();
+
+        if (signInResponse.ok && signInData.access_token) {
+          // Successfully signed in - set cookies and return
+          const cookieStore = await cookies();
+
+          cookieStore.set("sb-access-token", signInData.access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: signInData.expires_in || 3600,
+            path: "/",
+          });
+
+          if (signInData.refresh_token) {
+            cookieStore.set("sb-refresh-token", signInData.refresh_token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 30,
+              path: "/",
+            });
+          }
+
+          return NextResponse.json({
+            success: true,
+            requiresEmailConfirmation: false,
+            user: {
+              id: signInData.user.id,
+              email: signInData.user.email,
+              name: signInData.user.user_metadata?.name,
+            },
+          });
+        } else {
+          // Sign in failed - user exists but wrong password
+          return errorResponse(
+            "signup_failed",
+            "An account with this email already exists. Please use the correct password or try logging in.",
+            400,
+          );
+        }
+      }
+
       return errorResponse(
         "signup_failed",
         signUpData.error_description ||
@@ -86,7 +146,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email confirmation is required
-    if (!signUpData.session) {
+    // Only require email confirmation if user is not confirmed AND no session exists
+    if (!signUpData.session && !signUpData.user.confirmed_at) {
       return NextResponse.json({
         success: true,
         requiresEmailConfirmation: true,
@@ -98,38 +159,66 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // If user is confirmed but no session, try to create a session by signing in
+    if (!signUpData.session && signUpData.user.confirmed_at) {
+      console.log("User confirmed but no session - attempting to sign in");
+      const signInResponse = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseAnonKey,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const signInData = await signInResponse.json();
+      if (signInData.session) {
+        signUpData.session = signInData.session;
+      }
+    }
+
     // Set session cookies if session is available
-    const cookieStore = await cookies();
+    if (signUpData.session) {
+      const cookieStore = await cookies();
 
-    if (signUpData.session.access_token) {
-      cookieStore.set("sb-access-token", signUpData.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: signUpData.session.expires_in || 3600,
-        path: "/",
+      if (signUpData.session.access_token) {
+        cookieStore.set("sb-access-token", signUpData.session.access_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: signUpData.session.expires_in || 3600,
+          path: "/",
+        });
+      }
+
+      if (signUpData.session.refresh_token) {
+        cookieStore.set("sb-refresh-token", signUpData.session.refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+          path: "/",
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        requiresEmailConfirmation: false,
+        user: {
+          id: signUpData.user.id,
+          email: signUpData.user.email,
+          name: signUpData.user.user_metadata?.name,
+        },
       });
+    } else {
+      // No session even after trying to sign in - this is unexpected
+      console.error("No session available after signup and sign in attempt");
+      return errorResponse(
+        "signup_failed",
+        "Failed to create session. Please try logging in.",
+        500,
+      );
     }
-
-    if (signUpData.session.refresh_token) {
-      cookieStore.set("sb-refresh-token", signUpData.session.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        path: "/",
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      requiresEmailConfirmation: false,
-      user: {
-        id: signUpData.user.id,
-        email: signUpData.user.email,
-        name: signUpData.user.user_metadata?.name,
-      },
-    });
   } catch (error) {
     console.error("Signup error:", error);
     return errorResponse("internal_error", "Signup failed", 500);

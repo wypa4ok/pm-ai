@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUnit, getUnitsAndTenants, createTenancy } from "../actions";
+import { createUnit, createTenant, getUnitsAndTenants, createTenancy } from "../actions";
 
 type Unit = {
   id: string;
@@ -28,6 +28,7 @@ export default function NewTenancyPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [showNewUnitForm, setShowNewUnitForm] = useState(false);
+  const [showNewTenantForm, setShowNewTenantForm] = useState(false);
 
   const [formData, setFormData] = useState({
     unitId: "",
@@ -45,6 +46,13 @@ export default function NewTenancyPage() {
     state: "",
     postalCode: "",
     notes: "",
+  });
+
+  const [newTenantData, setNewTenantData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
   });
 
   // Load units and tenants on mount
@@ -87,6 +95,39 @@ export default function NewTenancyPage() {
     } catch (err) {
       console.error("Error creating unit:", err);
       setError(err instanceof Error ? err.message : "Failed to create unit");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateTenant = async () => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const result = await createTenant(newTenantData);
+
+      // Add new tenant to list and select it for the first member
+      const newTenant = result.tenant;
+      setTenants([...tenants, newTenant]);
+
+      // If this is the first member slot and it's empty, auto-select the new tenant
+      if (formData.members.length > 0 && !formData.members[0].tenantId) {
+        const newMembers = [...formData.members];
+        newMembers[0].tenantId = newTenant.id;
+        setFormData({ ...formData, members: newMembers });
+      }
+
+      setShowNewTenantForm(false);
+      setNewTenantData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+      });
+    } catch (err) {
+      console.error("Error creating tenant:", err);
+      setError(err instanceof Error ? err.message : "Failed to create tenant");
     } finally {
       setIsLoading(false);
     }
@@ -394,14 +435,104 @@ export default function NewTenancyPage() {
             <h2 className="text-lg font-semibold text-slate-900">
               Tenant Members
             </h2>
-            <button
-              type="button"
-              onClick={addMember}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Add Member
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowNewTenantForm(!showNewTenantForm)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                {showNewTenantForm ? "Cancel" : "Create New Tenant"}
+              </button>
+              <button
+                type="button"
+                onClick={addMember}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Add Member
+              </button>
+            </div>
           </div>
+
+          {showNewTenantForm && (
+            <div className="mt-4 space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
+              <h3 className="text-sm font-semibold text-slate-900">
+                New Tenant Details
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    required={showNewTenantForm}
+                    value={newTenantData.firstName}
+                    onChange={(e) =>
+                      setNewTenantData({ ...newTenantData, firstName: e.target.value })
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="John"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    required={showNewTenantForm}
+                    value={newTenantData.lastName}
+                    onChange={(e) =>
+                      setNewTenantData({ ...newTenantData, lastName: e.target.value })
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    required={showNewTenantForm}
+                    value={newTenantData.email}
+                    onChange={(e) =>
+                      setNewTenantData({ ...newTenantData, email: e.target.value })
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="john.doe@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Phone (optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={newTenantData.phone}
+                    onChange={(e) =>
+                      setNewTenantData({ ...newTenantData, phone: e.target.value })
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCreateTenant}
+                disabled={isLoading}
+                className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {isLoading ? "Creating Tenant..." : "Create Tenant"}
+              </button>
+            </div>
+          )}
 
           <div className="mt-4 space-y-4">
             {formData.members.map((member, index) => (
@@ -429,10 +560,9 @@ export default function NewTenancyPage() {
                         </option>
                       ))}
                     </select>
-                    {tenants.length === 0 && (
+                    {tenants.length === 0 && !showNewTenantForm && (
                       <p className="mt-1 text-xs text-slate-500">
-                        No tenants available. You can add tenants from the
-                        tenancy detail page after creation.
+                        No tenants available. Click "Create New Tenant" to add one.
                       </p>
                     )}
                   </div>
@@ -496,7 +626,7 @@ export default function NewTenancyPage() {
           </Link>
           <button
             type="submit"
-            disabled={isLoading || showNewUnitForm}
+            disabled={isLoading || showNewUnitForm || showNewTenantForm}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {isLoading ? "Creating..." : "Create Tenancy"}

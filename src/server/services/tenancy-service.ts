@@ -80,6 +80,40 @@ export async function listTenants(): Promise<TenantListItem[]> {
 }
 
 /**
+ * Create a new tenant
+ */
+export async function createTenant(input: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  unitId?: string;
+}) {
+  const email = input.email.trim().toLowerCase();
+
+  // Check if tenant with this email already exists
+  const existingTenant = await prisma.tenant.findFirst({
+    where: { email },
+  });
+
+  if (existingTenant) {
+    throw new Error("A tenant with this email already exists");
+  }
+
+  const tenant = await prisma.tenant.create({
+    data: {
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
+      email,
+      phone: input.phone?.trim() || null,
+      unitId: input.unitId || null,
+    },
+  });
+
+  return tenant;
+}
+
+/**
  * Get a tenancy with full details (unit, members, tickets)
  */
 export async function getTenancyWithDetails(id: string) {
