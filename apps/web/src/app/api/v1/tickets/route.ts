@@ -129,10 +129,29 @@ export async function POST(request: NextRequest) {
       unitId = tenantRecord.unitId;
     }
 
-    // For tenants, ownerUserId should be the property owner, not the tenant
-    // For now, we'll need to determine the owner - this is a placeholder
-    // You may want to add ownerUserId to the unit or tenancy table
-    // For now, keep it as the authenticated user's ID
+    // For tenants, get the property owner from the unit
+    if (unitId) {
+      const unit = await prisma.unit.findUnique({
+        where: { id: unitId },
+        select: { ownerUserId: true },
+      });
+
+      if (unit) {
+        ownerUserId = unit.ownerUserId;
+      } else {
+        return errorResponse(
+          "not_found",
+          "Unit not found",
+          404,
+        );
+      }
+    } else {
+      return errorResponse(
+        "invalid_request",
+        "Tenant must have an associated unit to create tickets",
+        400,
+      );
+    }
   }
 
   const ticket = await ticketService.createTicket({

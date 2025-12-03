@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
   const data = parsed.data;
 
   const unit = await unitService.createUnit({
+    ownerUserId: authed.auth.user.id,
     name: data.name,
     address1: data.address1,
     address2: data.address2 ?? undefined,

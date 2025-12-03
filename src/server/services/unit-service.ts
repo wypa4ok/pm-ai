@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 
 export type CreateUnitInput = {
+  ownerUserId: string;
   name: string;
   address1: string;
   address2?: string;
@@ -24,6 +25,7 @@ export type UnitListItem = {
 export async function createUnit(input: CreateUnitInput) {
   const unit = await prisma.unit.create({
     data: {
+      ownerUserId: input.ownerUserId,
       name: input.name,
       address1: input.address1,
       address2: input.address2 || null,

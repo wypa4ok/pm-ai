@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { errorResponse } from "../../../../../../../src/server/api/errors";
-import { withAuth } from "../../../../../../../src/server/api/middleware/auth";
-import { applyCors } from "../../../../../../../src/server/api/middleware/cors";
-import { rateLimit } from "../../../../../../../src/server/api/middleware/rate-limit";
-import { prisma } from "../../../../../../../src/server/db";
+import { errorResponse } from "../../../../../../../../src/server/api/errors";
+import { withAuth } from "../../../../../../../../src/server/api/middleware/auth";
+import { applyCors } from "../../../../../../../../src/server/api/middleware/cors";
+import { rateLimit } from "../../../../../../../../src/server/api/middleware/rate-limit";
+import { prisma } from "../../../../../../../../src/server/db";
 
 export async function GET(
   request: NextRequest,
