@@ -5,6 +5,7 @@ import { withAuth } from "~/server/api/middleware/auth";
 import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
 import { prisma } from "~/server/db";
+import { getUserRoles } from "~/server/services/user-roles";
 
 const updateSchema = z.object({
   endDate: z.string().datetime().or(z.date()).optional().nullable(),
@@ -32,8 +33,11 @@ export async function GET(
   const authed = await withAuth(request);
   if (authed instanceof Response) return authed;
 
+  // Get user roles from database
+  const roles = await getUserRoles(authed.auth.user.id);
+
   // Enforce OWNER role
-  if (!authed.auth.roles.includes("OWNER")) {
+  if (!roles.includes("OWNER")) {
     return errorResponse(
       "forbidden",
       "Only property owners can access tenancies",

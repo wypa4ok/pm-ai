@@ -6,6 +6,7 @@ import { withAuth } from "../../../../../../../src/server/api/middleware/auth";
 import { applyCors } from "../../../../../../../src/server/api/middleware/cors";
 import { rateLimit } from "../../../../../../../src/server/api/middleware/rate-limit";
 import * as ticketService from "../../../../../../../src/server/services/ticket-service";
+import { getUserRoles } from "../../../../../../../src/server/services/user-roles";
 
 const createSchema = z.object({
   subject: z.string().min(2),
@@ -64,7 +65,6 @@ export async function GET(request: NextRequest) {
       tenantId: ticket.tenantId,
       unitId: ticket.unitId,
       latestMessageSnippet:
-        ticket.messages[0]?.snippet ??
         ticket.messages[0]?.bodyText ??
         ticket.messages[0]?.bodyHtml ??
         undefined,
@@ -94,15 +94,57 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
 
+  // Get user roles from database
+  const roles = await getUserRoles(authed.auth.user.id);
+
+  // Determine if user is a tenant or owner
+  const isTenant = roles.includes("TENANT") && !roles.includes("OWNER");
+
+  let ownerUserId = authed.auth.user.id;
+  let tenantId = data.tenantId;
+  let unitId = data.unitId;
+  let tenantUserId: string | undefined;
+
+  if (isTenant) {
+    // For tenant users, find their tenant record and associated info
+    const { prisma } = await import("../../../../../../../src/server/db");
+    const tenantRecord = await prisma.tenant.findFirst({
+      where: { userId: authed.auth.user.id },
+    });
+
+    if (!tenantRecord) {
+      return errorResponse(
+        "forbidden",
+        "Tenant account not properly linked",
+        403,
+      );
+    }
+
+    // Use tenant's info
+    tenantId = tenantRecord.id;
+    tenantUserId = authed.auth.user.id;
+
+    // Get unit from tenant record if available
+    if (!unitId && tenantRecord.unitId) {
+      unitId = tenantRecord.unitId;
+    }
+
+    // For tenants, ownerUserId should be the property owner, not the tenant
+    // For now, we'll need to determine the owner - this is a placeholder
+    // You may want to add ownerUserId to the unit or tenancy table
+    // For now, keep it as the authenticated user's ID
+  }
+
   const ticket = await ticketService.createTicket({
     subject: data.subject,
     description: data.description,
     category: data.category,
     priority: data.priority,
-    channel: data.channel,
-    ownerUserId: authed.auth.user.id,
-    tenantId: data.tenantId,
-    unitId: data.unitId,
+    channel: data.channel || "INTERNAL",
+    ownerUserId,
+    tenantId,
+    unitId,
+    tenantUserId,
   });
 
   return NextResponse.json(

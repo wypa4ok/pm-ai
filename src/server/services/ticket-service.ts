@@ -11,6 +11,7 @@ export type CreateTicketInput = {
   tenantId?: string;
   unitId?: string;
   ownerUserId: string;
+  tenantUserId?: string;
 };
 
 export type SearchTicketsInput = {
@@ -77,8 +78,9 @@ export async function createTicket(input: CreateTicketInput) {
       priority: input.priority,
       channel: input.channel,
       ownerUserId: input.ownerUserId,
-      tenant: input.tenantId ? { connect: { id: input.tenantId } } : undefined,
-      unit: input.unitId ? { connect: { id: input.unitId } } : undefined,
+      tenantUserId: input.tenantUserId ?? null,
+      tenantId: input.tenantId ?? null,
+      unitId: input.unitId ?? null,
     },
   });
 

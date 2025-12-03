@@ -6,6 +6,7 @@ import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
 import { prisma } from "~/server/db";
 import { createTenantInvite } from "~/server/services/tenant-invite";
+import { getUserRoles } from "~/server/services/user-roles";
 
 const addMemberSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -28,8 +29,11 @@ export async function POST(
   const authed = await withAuth(request);
   if (authed instanceof Response) return authed;
 
+  // Get user roles from database
+  const roles = await getUserRoles(authed.auth.user.id);
+
   // Enforce OWNER role
-  if (!authed.auth.roles.includes("OWNER")) {
+  if (!roles.includes("OWNER")) {
     return errorResponse(
       "forbidden",
       "Only property owners can add tenancy members",
