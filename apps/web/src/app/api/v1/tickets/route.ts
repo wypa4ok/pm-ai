@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { TicketCategory, TicketPriority, MessageChannel } from "@prisma/client";
-import { errorResponse } from "../../../../../src/server/api/errors";
-import { withAuth } from "../../../../../src/server/api/middleware/auth";
-import { applyCors } from "../../../../../src/server/api/middleware/cors";
-import { rateLimit } from "../../../../../src/server/api/middleware/rate-limit";
-import * as ticketService from "../../../../../src/server/services/ticket-service";
+import { errorResponse } from "../../../../../../../src/server/api/errors";
+import { withAuth } from "../../../../../../../src/server/api/middleware/auth";
+import { applyCors } from "../../../../../../../src/server/api/middleware/cors";
+import { rateLimit } from "../../../../../../../src/server/api/middleware/rate-limit";
+import * as ticketService from "../../../../../../../src/server/services/ticket-service";
 
 const createSchema = z.object({
   subject: z.string().min(2),
@@ -32,6 +32,10 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get("category") ?? undefined;
   const channel = searchParams.get("channel") ?? undefined;
   const search = searchParams.get("search") ?? undefined;
+  const tenantId = searchParams.get("tenantId") ?? undefined;
+  const tenancyId = searchParams.get("tenancyId") ?? undefined;
+  const tenantEmail = searchParams.get("tenantEmail") ?? undefined;
+  const tenantUserId = searchParams.get("tenantUserId") ?? undefined;
   const limit = Number(searchParams.get("limit") ?? "50");
 
   const tickets = await ticketService.listTickets({
@@ -39,6 +43,10 @@ export async function GET(request: NextRequest) {
     category,
     channel,
     search,
+    tenantId,
+    tenancyId,
+    tenantEmail,
+    tenantUserId,
     limit: Number.isFinite(limit) && limit > 0 ? limit : 50,
     ownerUserId: authed.auth.user.id,
   });

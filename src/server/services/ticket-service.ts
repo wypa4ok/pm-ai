@@ -20,6 +20,10 @@ export type SearchTicketsInput = {
   search?: string;
   limit?: number;
   ownerUserId: string;
+  tenantId?: string;
+  tenancyId?: string;
+  tenantEmail?: string;
+  tenantUserId?: string;
 };
 
 /**
@@ -33,6 +37,10 @@ export async function listTickets(input: SearchTicketsInput) {
     search: input.search,
     limit: input.limit ?? 50,
     ownerUserId: input.ownerUserId,
+    tenantId: input.tenantId,
+    tenancyId: input.tenancyId,
+    tenantEmail: input.tenantEmail,
+    tenantUserId: input.tenantUserId,
   });
 
   return tickets;

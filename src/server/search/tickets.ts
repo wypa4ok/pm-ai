@@ -8,20 +8,32 @@ type TicketFilters = {
   limit?: number;
   ownerUserId?: string;
   tenantUserId?: string;
+  tenantId?: string;
+  tenancyId?: string;
+  tenantEmail?: string;
 };
 
 export async function searchTickets(filters: TicketFilters) {
-  const { status, category, channel, ownerUserId, tenantUserId } = filters;
+  const { status, category, channel, ownerUserId, tenantUserId, tenantId, tenancyId, tenantEmail } = filters;
   const limit = filters.limit ?? 50;
   const searchTerm = normalizeSearch(filters.search);
 
-  const baseWhere = {
+  const baseWhere: any = {
     status: status || undefined,
     category: category || undefined,
     channel: channel || undefined,
     ownerUserId: ownerUserId || undefined,
     tenantUserId: tenantUserId || undefined,
+    tenantId: tenantId || undefined,
+    tenancyId: tenancyId || undefined,
   };
+
+  // If filtering by tenant email, need to join through tenant table
+  if (tenantEmail) {
+    baseWhere.tenant = {
+      email: tenantEmail,
+    };
+  }
 
   if (!searchTerm) {
     return prisma.ticket.findMany({

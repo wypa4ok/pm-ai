@@ -1,5 +1,6 @@
 import TicketTable from "../components/TicketTable";
 import { searchTickets } from "../../../../../../src/server/search/tickets";
+import { prisma } from "../../../../../../src/server/db";
 
 const statusOptions = ["OPEN", "IN_PROGRESS", "ESCALATED", "SCHEDULED", "RESOLVED", "CLOSED"];
 const categoryOptions = ["MAINTENANCE", "BILLING", "COMMUNICATION", "OPERATIONS", "OTHER"];
@@ -35,12 +36,25 @@ export default async function TicketsPage({
   const category = typeof searchParams?.category === "string" ? searchParams.category : "";
   const channel = typeof searchParams?.channel === "string" ? searchParams.channel : "";
   const search = typeof searchParams?.search === "string" ? searchParams.search : "";
+  const tenantId = typeof searchParams?.tenantId === "string" ? searchParams.tenantId : "";
+
+  // Fetch all tenants for the dropdown filter
+  const tenants = await prisma.tenant.findMany({
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
+  });
 
   const tickets = await searchTickets({
     status: status || undefined,
     category: category || undefined,
     channel: channel || undefined,
     search: search || undefined,
+    tenantId: tenantId || undefined,
     limit: 50,
   });
 
@@ -57,7 +71,7 @@ export default async function TicketsPage({
       </header>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <form className="grid gap-4 md:grid-cols-4" method="get">
+        <form className="grid gap-4 md:grid-cols-5" method="get">
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Status
             <select
@@ -107,12 +121,28 @@ export default async function TicketsPage({
           </label>
 
           <label className="grid gap-1 text-sm font-medium text-slate-700">
+            Tenant
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              name="tenantId"
+              defaultValue={tenantId}
+            >
+              <option value="">All tenants</option>
+              {tenants.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.firstName} {tenant.lastName} ({tenant.email})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-sm font-medium text-slate-700">
             Search
             <input
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
               name="search"
               defaultValue={search}
-              placeholder="Subject, tenant, keywords"
+              placeholder="Subject, keywords"
             />
           </label>
         </form>
