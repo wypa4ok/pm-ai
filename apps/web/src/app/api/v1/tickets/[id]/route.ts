@@ -4,6 +4,7 @@ import { withAuth } from "../../../../../../../../src/server/api/middleware/auth
 import { applyCors } from "../../../../../../../../src/server/api/middleware/cors";
 import { rateLimit } from "../../../../../../../../src/server/api/middleware/rate-limit";
 import { prisma } from "../../../../../../../../src/server/db";
+import { getUserRoles } from "../../../../../../../../src/server/services/user-roles";
 
 export async function GET(
   request: NextRequest,
@@ -18,8 +19,23 @@ export async function GET(
   const authed = await withAuth(request);
   if (authed instanceof Response) return authed;
 
+  // Get user roles to determine access permissions
+  const roles = await getUserRoles(authed.auth.user.id);
+  const isTenant = roles.includes("TENANT") && !roles.includes("OWNER");
+
+  // Build where clause based on user role
+  const whereClause: any = { id: params.id };
+
+  if (isTenant) {
+    // Tenants can only see tickets where they are the tenant user
+    whereClause.tenantUserId = authed.auth.user.id;
+  } else {
+    // Owners can only see tickets they own
+    whereClause.ownerUserId = authed.auth.user.id;
+  }
+
   const ticket = await prisma.ticket.findFirst({
-    where: { id: params.id, ownerUserId: authed.auth.user.id },
+    where: whereClause,
     include: {
       tenant: true,
       unit: true,
@@ -31,7 +47,7 @@ export async function GET(
   });
 
   if (!ticket) {
-    return errorResponse("not_found", "Ticket not found", 404);
+    return errorResponse("not_found", "Ticket not found or you don't have access to it", 404);
   }
 
   return NextResponse.json({
