@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { handleSignUpload } from "../../../../../../src/server/api/uploads";
-import { withAuth } from "../../../../../../src/server/api/middleware/auth";
-import { applyCors } from "../../../../../../src/server/api/middleware/cors";
-import { rateLimit } from "../../../../../../src/server/api/middleware/rate-limit";
+import { handleSignUpload } from "../../../../../../../../src/server/api/uploads";
+import { withAuth } from "../../../../../../../../src/server/api/middleware/auth";
+import { applyCors } from "../../../../../../../../src/server/api/middleware/cors";
+import { rateLimit } from "../../../../../../../../src/server/api/middleware/rate-limit";
 
 export async function POST(request: NextRequest) {
   const cors = applyCors(request, allowedOrigins());

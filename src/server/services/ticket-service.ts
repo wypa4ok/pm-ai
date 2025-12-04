@@ -9,6 +9,7 @@ export type CreateTicketInput = {
   priority?: TicketPriority;
   channel?: MessageChannel;
   tenantId?: string;
+  tenancyId?: string;
   unitId?: string;
   ownerUserId: string;
   tenantUserId?: string;
@@ -80,6 +81,7 @@ export async function createTicket(input: CreateTicketInput) {
       ownerUserId: input.ownerUserId,
       tenantUserId: input.tenantUserId ?? null,
       tenantId: input.tenantId ?? null,
+      tenancyId: input.tenancyId ?? null,
       unitId: input.unitId ?? null,
     },
   });

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { errorResponse } from "../../../../../src/server/api/errors";
-import { withAuth } from "../../../../../src/server/api/middleware/auth";
-import { applyCors } from "../../../../../src/server/api/middleware/cors";
-import { rateLimit } from "../../../../../src/server/api/middleware/rate-limit";
-import { prisma } from "../../../../../src/server/db";
-import { sendGmailMessage } from "../../../../../src/server/integrations/gmail-send";
+import { errorResponse } from "../../../../../../../src/server/api/errors";
+import { withAuth } from "../../../../../../../src/server/api/middleware/auth";
+import { applyCors } from "../../../../../../../src/server/api/middleware/cors";
+import { rateLimit } from "../../../../../../../src/server/api/middleware/rate-limit";
+import { prisma } from "../../../../../../../src/server/db";
+import { sendGmailMessage } from "../../../../../../../src/server/integrations/gmail-send";
 
 const inlineAttachmentSchema = z.object({
   filename: z.string().min(1),

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { prisma } from "../../../../../src/server/db";
-import { fetchSupabaseUser } from "../../../server/session/role";
+import { prisma } from "../../../../../../../src/server/db";
+import { fetchSupabaseUser } from "../../../../server/session/role";
 
 const updateSchema = z.object({
   phone: z.string().nullable().optional(),

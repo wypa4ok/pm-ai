@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { errorResponse } from "../../../../../../src/server/api/errors";
+import { errorResponse } from "../../../../../../../../src/server/api/errors";
 
 const schema = z.object({
   email: z.string().email(),

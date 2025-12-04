@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { prisma } from "../../../../../../src/server/db";
+import { prisma } from "../../../../../../../../src/server/db";
 import { fetchSupabaseUser } from "../../../../../server/session/role";
 
 /**

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../../../../src/server/db";
 import TenantMembersSection from "./components/TenantMembersSection";
+import CreateTicketButton from "./components/CreateTicketButton";
 
 export default async function TenancyDetailPage({
   params,
@@ -134,9 +135,17 @@ export default async function TenancyDetailPage({
           <h2 className="text-lg font-semibold text-slate-900">
             Associated Tickets
           </h2>
-          <span className="text-sm text-slate-500">
-            {tenancy.tickets.length} {tenancy.tickets.length === 1 ? "ticket" : "tickets"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500">
+              {tenancy.tickets.length} {tenancy.tickets.length === 1 ? "ticket" : "tickets"}
+            </span>
+            <CreateTicketButton
+              tenancyId={tenancy.id}
+              unitId={tenancy.unit.id}
+              tenantId={primaryMember?.tenant.id ?? undefined}
+              tenantUserId={primaryMember?.tenant.userId ?? undefined}
+            />
+          </div>
         </div>
         {tenancy.tickets.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">

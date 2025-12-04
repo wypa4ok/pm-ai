@@ -74,7 +74,11 @@ export default function TenantTicketTable({ tickets }: TenantTicketTableProps) {
                 </span>
               </td>
               <td className="py-3 pr-3 align-top text-xs text-slate-500">
-                {new Date(ticket.openedAt).toLocaleDateString()}
+                {new Date(ticket.openedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "numeric",
+                  day: "numeric",
+                })}
               </td>
             </tr>
           ))}

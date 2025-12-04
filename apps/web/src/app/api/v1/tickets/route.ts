@@ -15,7 +15,10 @@ const createSchema = z.object({
   priority: z.nativeEnum(TicketPriority).optional(),
   channel: z.nativeEnum(MessageChannel).optional(),
   tenantId: z.string().uuid().optional(),
+  tenancyId: z.string().uuid().optional(),
   unitId: z.string().uuid().optional(),
+  tenantUserId: z.string().uuid().optional(),
+  attachments: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -85,9 +88,15 @@ export async function POST(request: NextRequest) {
   const json = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(json);
   if (!parsed.success) {
+    const fieldErrors = Object.entries(parsed.error.flatten().fieldErrors)
+      .map(([field, errors]) => `${field}: ${errors?.join(", ")}`)
+      .join("; ");
+    const formErrors = parsed.error.flatten().formErrors.join(", ");
+    const errorMessage = fieldErrors || formErrors || "Validation failed";
+    console.error("Validation error:", errorMessage, "Input:", json);
     return errorResponse(
       "invalid_request",
-      parsed.error.flatten().formErrors.join(", "),
+      errorMessage,
       400,
     );
   }
@@ -131,7 +140,8 @@ export async function POST(request: NextRequest) {
 
     // For tenants, get the property owner from the unit
     if (unitId) {
-      const unit = await prisma.unit.findUnique({
+      const { prisma: prismaClient } = await import("../../../../../../../src/server/db");
+      const unit = await prismaClient.unit.findUnique({
         where: { id: unitId },
         select: { ownerUserId: true },
       });
@@ -152,9 +162,14 @@ export async function POST(request: NextRequest) {
         400,
       );
     }
+  } else {
+    // For owners creating tickets, use the tenantUserId from the request if provided
+    if (data.tenantUserId) {
+      tenantUserId = data.tenantUserId;
+    }
   }
 
-  const ticket = await ticketService.createTicket({
+  const ticketInput = {
     subject: data.subject,
     description: data.description,
     category: data.category,
@@ -162,9 +177,13 @@ export async function POST(request: NextRequest) {
     channel: data.channel || "INTERNAL",
     ownerUserId,
     tenantId,
+    tenancyId: data.tenancyId,
     unitId,
     tenantUserId,
-  });
+  };
+  console.log("Creating ticket with input:", ticketInput);
+
+  const ticket = await ticketService.createTicket(ticketInput);
 
   return NextResponse.json(
     {

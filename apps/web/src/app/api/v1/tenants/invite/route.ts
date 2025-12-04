@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { errorResponse } from "../../../../../../src/server/api/errors";
-import { withAuth } from "../../../../../../src/server/api/middleware/auth";
-import { createTenantInvite } from "../../../../../../src/server/services/tenant-invite";
-import { deriveRoles } from "../../../../server/session/role";
+import { errorResponse } from "../../../../../../../../src/server/api/errors";
+import { withAuth } from "../../../../../../../../src/server/api/middleware/auth";
+import { createTenantInvite } from "../../../../../../../../src/server/services/tenant-invite";
+import { deriveRoles } from "../../../../../../server/session/role";
 
 const schema = z.object({
   firstName: z.string().min(2),

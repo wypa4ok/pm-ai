@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { errorResponse } from "../../../../src/server/api/errors";
-import { withAuth } from "../../../../src/server/api/middleware/auth";
-import { applyCors } from "../../../../src/server/api/middleware/cors";
-import { rateLimit } from "../../../../src/server/api/middleware/rate-limit";
+import { errorResponse } from "../../../../../../src/server/api/errors";
+import { withAuth } from "../../../../../../src/server/api/middleware/auth";
+import { applyCors } from "../../../../../../src/server/api/middleware/cors";
+import { rateLimit } from "../../../../../../src/server/api/middleware/rate-limit";
 
 export async function GET(request: NextRequest) {
   const cors = applyCors(request, allowedOrigins());

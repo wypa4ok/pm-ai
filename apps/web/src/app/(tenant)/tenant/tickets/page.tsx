@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { searchTickets } from "../../../../../../../src/server/search/tickets";
 import { fetchSupabaseUser } from "../../../../server/session/role";
+import { getTenantByUserId } from "../../../../../../../src/server/services/tenant-service";
 import TenantTicketTable from "../components/TenantTicketTable";
 
 const statusOptions = ["OPEN", "IN_PROGRESS", "ESCALATED", "SCHEDULED", "RESOLVED", "CLOSED"];
@@ -41,19 +42,47 @@ export default async function TenantTicketsPage({
     redirect("/login");
   }
 
+  // Get tenant record to find tenantId
+  const tenant = await getTenantByUserId(supabaseUser.id);
+
+  if (!tenant) {
+    redirect("/login");
+  }
+
+  // Debug: Check what tickets exist for this tenant in the database
+  const { prisma } = await import("../../../../../../../src/server/db");
+  const allTicketsForTenant = await prisma.ticket.findMany({
+    where: {
+      OR: [
+        { tenantUserId: supabaseUser.id },
+        { tenantId: tenant.id },
+      ],
+    },
+  });
+  console.log(`DEBUG: All tickets in DB for tenant ${tenant.id}:`, allTicketsForTenant.map(t => ({
+    id: t.id,
+    subject: t.subject,
+    tenantId: t.tenantId,
+    tenantUserId: t.tenantUserId,
+  })));
+
   const status = typeof searchParams?.status === "string" ? searchParams.status : "";
   const category = typeof searchParams?.category === "string" ? searchParams.category : "";
   const search = typeof searchParams?.search === "string" ? searchParams.search : "";
 
   const tickets = await searchTickets({
     tenantUserId: supabaseUser.id,
+    tenantId: tenant.id,
     status: status || undefined,
     category: category || undefined,
     search: search || undefined,
     limit: 50,
   });
 
+  console.log(`Tenant tickets page: found ${tickets.length} tickets for tenant ${tenant.id}`);
+
   const serialized = serializeTickets(tickets);
+  console.log(`Serialized ${serialized.length} tickets:`, serialized.map(t => ({ id: t.id, subject: t.subject })));
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
