@@ -1,5 +1,7 @@
-import { prisma } from "../db";
-import type { ContractorCategory } from "@prisma/client";
+import { prisma, findContractors } from "../db";
+import { searchExternalContractors, type ExternalContractorProfile } from "../integrations/contractor-search";
+import { analyzeTicketForContractors, type ContractorSearchAnalysis } from "../ai/contractor-analyzer";
+import type { Contractor, ContractorCategory } from "@prisma/client";
 
 export type CreateContractorInput = {
   companyName: string;
@@ -108,4 +110,141 @@ function sanitizeOptionalString(value?: string) {
 
 function sanitizeServiceAreas(values: string[]) {
   return values.map((value) => value.trim()).filter(Boolean);
+}
+
+// ============================================================================
+// AI-POWERED CONTRACTOR SEARCH
+// ============================================================================
+
+export interface SearchContractorsWithAIInput {
+  ticketId: string;
+  forceExternal?: boolean; // Force Google search even if internal contractors found
+}
+
+export interface SearchContractorsWithAIResult {
+  analysis: ContractorSearchAnalysis;
+  internalContractors: Contractor[];
+  externalContractors: ExternalContractorProfile[];
+  usedExternal: boolean;
+  source: "internal" | "external" | "both";
+}
+
+/**
+ * Searches for contractors using AI-powered ticket analysis
+ * Prioritizes internal contractors, falls back to Google Maps if needed
+ */
+export async function searchContractorsWithAI(
+  input: SearchContractorsWithAIInput,
+): Promise<SearchContractorsWithAIResult> {
+  // Step 1: Analyze ticket with AI
+  const analysis = await analyzeTicketForContractors({ ticketId: input.ticketId });
+
+  // Step 2: Search internal contractors first
+  const internalResults = await searchInternalContractors(analysis);
+
+  // Step 3: Determine if external search is needed
+  const shouldSearchExternal = input.forceExternal || internalResults.length === 0;
+
+  let externalResults: ExternalContractorProfile[] = [];
+  if (shouldSearchExternal) {
+    externalResults = await searchExternalContractorsFromAnalysis(analysis, input.ticketId);
+  }
+
+  // Determine source
+  let source: "internal" | "external" | "both";
+  if (internalResults.length > 0 && externalResults.length > 0) {
+    source = "both";
+  } else if (internalResults.length > 0) {
+    source = "internal";
+  } else {
+    source = "external";
+  }
+
+  return {
+    analysis,
+    internalContractors: internalResults,
+    externalContractors: externalResults,
+    usedExternal: externalResults.length > 0,
+    source,
+  };
+}
+
+/**
+ * Search internal contractor database using AI analysis
+ */
+async function searchInternalContractors(
+  analysis: ContractorSearchAnalysis,
+): Promise<Contractor[]> {
+  const keywords = analysis.keywords.join(" ");
+  const category = analysis.requiredTrade[0]; // Use first trade as primary category
+
+  const results = await findContractors({
+    search: keywords || analysis.specialty,
+    category,
+    limit: 5,
+  });
+
+  console.log(
+    `Internal contractor search: found ${results.length} matches for "${keywords}" in category "${category}"`,
+  );
+
+  return results;
+}
+
+/**
+ * Search Google Maps using AI analysis
+ */
+async function searchExternalContractorsFromAnalysis(
+  analysis: ContractorSearchAnalysis,
+  ticketId: string,
+): Promise<ExternalContractorProfile[]> {
+  // Get ticket for location data
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { unit: true },
+  });
+
+  if (!ticket) {
+    throw new Error(`Ticket ${ticketId} not found`);
+  }
+
+  // Build location string
+  const location = ticket.unit
+    ? `${ticket.unit.postalCode}, ${ticket.unit.city}, ${ticket.unit.state}`
+    : "Saint John, NB, Canada"; // Fallback location
+
+  // Use AI-generated search query
+  const results = await searchExternalContractors({
+    term: analysis.searchQuery,
+    location,
+    limit: 5,
+  });
+
+  console.log(
+    `External contractor search: found ${results.length} matches for "${analysis.searchQuery}" near "${location}"`,
+  );
+
+  return results;
+}
+
+/**
+ * Save external contractor to internal database
+ */
+export async function saveExternalContractor(
+  external: ExternalContractorProfile,
+  category?: ContractorCategory,
+): Promise<Contractor> {
+  // Map Google contractor to internal format
+  return prisma.contractor.create({
+    data: {
+      company: external.name,
+      contactName: external.name,
+      email: external.email || null,
+      phone: external.phone || null,
+      address: external.address || null,
+      category: category || ("OTHER" as ContractorCategory),
+      rating: external.rating ? Math.round(external.rating) : null,
+      notes: `Imported from Google Maps. Rating: ${external.rating || "N/A"} (${external.reviewCount || 0} reviews)`,
+    },
+  });
 }
