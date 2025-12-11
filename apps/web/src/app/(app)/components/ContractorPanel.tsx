@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Composer, { type ComposerPayload } from "./Composer";
 
 type Contractor = {
@@ -46,6 +46,39 @@ export default function ContractorPanel({
   const [draftMetadata, setDraftMetadata] = useState<any>(null);
   const [savingContractor, setSavingContractor] = useState<string | null>(null);
   const [savedContractors, setSavedContractors] = useState<Set<string>>(new Set());
+  const [loadingSaved, setLoadingSaved] = useState(true);
+
+  // Load saved search results on mount
+  useEffect(() => {
+    async function loadSavedResults() {
+      try {
+        const response = await fetch(`/api/v1/tickets/${ticketId}/analyze-contractors`);
+
+        if (!response.ok) {
+          setLoadingSaved(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.found) {
+          setAnalysis(data.analysis);
+          const allContractors = [
+            ...data.contractors.internal,
+            ...data.contractors.external,
+          ];
+          setContractors(allContractors);
+          console.log(`Loaded saved contractor search (${allContractors.length} contractors)`);
+        }
+      } catch (err) {
+        console.error("Failed to load saved results:", err);
+      } finally {
+        setLoadingSaved(false);
+      }
+    }
+
+    loadSavedResults();
+  }, [ticketId]);
 
   // AI-powered contractor search
   async function handleAISearch() {
@@ -204,11 +237,13 @@ export default function ContractorPanel({
         <h3 className="text-sm font-semibold text-slate-900">AI Contractor Search</h3>
         {searchingAI ? (
           <span className="text-xs text-slate-500">Analyzing ticket...</span>
+        ) : loadingSaved ? (
+          <span className="text-xs text-slate-500">Loading saved results...</span>
         ) : null}
       </div>
 
       {/* AI Search Button */}
-      {contractors.length === 0 && !searchingAI && (
+      {contractors.length === 0 && !searchingAI && !loadingSaved && (
         <div className="mt-4 text-center">
           <p className="text-sm text-slate-600 mb-3">
             Use AI to analyze this ticket and find the best contractors
@@ -250,10 +285,12 @@ export default function ContractorPanel({
             </p>
             <button
               onClick={handleAISearch}
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
               disabled={searchingAI}
+              title="Re-run AI search to find updated contractors"
             >
-              Refresh
+              <span>🔄</span>
+              <span>{searchingAI ? "Searching..." : "Refresh Search"}</span>
             </button>
           </div>
           <ul className="mt-2 space-y-2">

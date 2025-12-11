@@ -168,6 +168,7 @@ model Ticket {
   assignee      User?        @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   messages      Message[]
   agentEvents   AgentEvent[]
+  contractorSearchResult ContractorSearchResult?
 
   @@index([unitId])
   @@index([tenantId])
@@ -245,6 +246,23 @@ model AgentEvent {
   @@index([ticketId, createdAt])
   @@index([type])
   @@map("agent_events")
+}
+
+model ContractorSearchResult {
+  id               String   @id @default(uuid()) @db.Uuid
+  ticketId         String   @unique @map("ticket_id") @db.Uuid
+  analysis         Json     // AI analysis results
+  searchResults    Json     // Combined contractor results
+  source           String   // "internal" | "external" | "both"
+  usedExternal     Boolean  @map("used_external")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([createdAt])
+  @@map("contractor_search_results")
 }
 
 model TenantInvite {
