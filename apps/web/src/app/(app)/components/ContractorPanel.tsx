@@ -44,6 +44,8 @@ export default function ContractorPanel({
   const [selected, setSelected] = useState<Contractor | null>(null);
   const [draft, setDraft] = useState("");
   const [draftMetadata, setDraftMetadata] = useState<any>(null);
+  const [savingContractor, setSavingContractor] = useState<string | null>(null);
+  const [savedContractors, setSavedContractors] = useState<Set<string>>(new Set());
 
   // AI-powered contractor search
   async function handleAISearch() {
@@ -84,6 +86,51 @@ export default function ContractorPanel({
       );
     } finally {
       setSearchingAI(false);
+    }
+  }
+
+  // Save external contractor to internal database
+  async function handleSaveContractor(contractor: Contractor) {
+    if (contractor.source !== "google") {
+      return; // Only save external contractors
+    }
+
+    setSavingContractor(contractor.id);
+
+    try {
+      const response = await fetch("/api/v1/contractors/save-external", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contractor.name,
+          phone: contractor.phone,
+          email: contractor.email,
+          website: contractor.website,
+          rating: contractor.rating,
+          reviewCount: contractor.reviewCount,
+          address: contractor.address,
+          category: contractor.category,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to save contractor");
+      }
+
+      const savedContractor = await response.json();
+
+      // Mark as saved
+      setSavedContractors(prev => new Set(prev).add(contractor.id));
+
+      console.log(`Saved contractor ${contractor.name} with new ID ${savedContractor.id}`);
+    } catch (err) {
+      console.error("Save contractor error:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to save contractor",
+      );
+    } finally {
+      setSavingContractor(null);
     }
   }
 
@@ -219,12 +266,12 @@ export default function ContractorPanel({
                     : "border-slate-200"
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-slate-900">{contractor.name}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-slate-900 break-words">{contractor.name}</p>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium flex-shrink-0 ${
                           contractor.source === "internal"
                             ? "bg-green-100 text-green-700"
                             : "bg-slate-100 text-slate-600"
@@ -232,6 +279,29 @@ export default function ContractorPanel({
                       >
                         {contractor.source}
                       </span>
+                      {contractor.source === "google" && !savedContractors.has(contractor.id) && (
+                        <button
+                          onClick={() => handleSaveContractor(contractor)}
+                          disabled={savingContractor === contractor.id}
+                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-600 disabled:opacity-50"
+                          title="Save to your contractors"
+                        >
+                          {savingContractor === contractor.id ? (
+                            "Saving..."
+                          ) : (
+                            <>
+                              <span className="text-base">⭐</span>
+                              <span>Save</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {savedContractors.has(contractor.id) && (
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          <span className="text-base">✓</span>
+                          Saved
+                        </span>
+                      )}
                     </div>
                     {contractor.category && (
                       <p className="text-xs text-slate-500">{contractor.category}</p>
@@ -261,7 +331,7 @@ export default function ContractorPanel({
                     </div>
                   </div>
                   <button
-                    className="ml-2 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="flex-shrink-0 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
                     onClick={() => {
                       setSelected(contractor);
                       handleGenerateMessage(contractor);

@@ -237,14 +237,17 @@ export async function saveExternalContractor(
   // Map Google contractor to internal format
   return prisma.contractor.create({
     data: {
-      company: external.name,
+      companyName: external.name,
       contactName: external.name,
       email: external.email || null,
       phone: external.phone || null,
-      address: external.address || null,
       category: category || ("OTHER" as ContractorCategory),
-      rating: external.rating ? Math.round(external.rating) : null,
-      notes: `Imported from Google Maps. Rating: ${external.rating || "N/A"} (${external.reviewCount || 0} reviews)`,
+      serviceAreas: [],
+      rating: external.rating || null,
+      reviewCount: external.reviewCount || null,
+      notes: external.address
+        ? `Imported from Google Maps. Address: ${external.address}. Rating: ${external.rating || "N/A"} (${external.reviewCount || 0} reviews)`
+        : `Imported from Google Maps. Rating: ${external.rating || "N/A"} (${external.reviewCount || 0} reviews)`,
     },
   });
 }
