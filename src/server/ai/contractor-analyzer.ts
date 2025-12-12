@@ -60,18 +60,20 @@ TASK:
 Extract the following information to help find the right contractor:
 1. Maintenance type (brief description of the issue)
 2. Urgency level (low, medium, high, urgent) - consider priority and keywords like "emergency", "urgent", "asap"
-3. Required trades (e.g., PLUMBING, ELECTRICAL, HVAC, GENERAL, CLEANING, OTHER)
-4. Specific specialty keywords (e.g., "water heater repair", "AC emergency", "leak detection")
+3. Required trades - MUST be one or more of these EXACT values: PLUMBING, ELECTRICAL, HVAC, CARPENTRY, PAINTING, ROOFING, LANDSCAPING, APPLIANCE_REPAIR, PEST_CONTROL, GENERAL, CLEANING, OTHER
+4. Specific specialty keywords (e.g., "water heater repair", "AC emergency", "leak detection", "roof repair")
 5. Search query optimized for Google Maps (combine trade + specialty + urgency if needed)
 6. Brief summary of the issue for contractor outreach
+
+IMPORTANT: The "keywords" field should include search terms that would match contractor company names (e.g., for roof issues, include "roof", "roofing"; for plumbing, include "plumb", "plumbing", etc.)
 
 Return JSON only:
 {
   "maintenanceType": "...",
   "urgency": "low" | "medium" | "high" | "urgent",
-  "requiredTrade": ["PLUMBING", ...],
+  "requiredTrade": ["ROOFING", ...],
   "specialty": "...",
-  "keywords": ["keyword1", "keyword2", ...],
+  "keywords": ["roof", "roofing", "leak", ...],
   "searchQuery": "optimized google maps search query",
   "summary": "1-2 sentence summary for contractors"
 }`;
@@ -97,9 +99,9 @@ Return JSON only:
   await prisma.agentEvent.create({
     data: {
       ticketId: ticket.id,
-      type: "CONTRACTOR_ANALYSIS",
+      type: "CONTRACTOR_ANALYSIS" as any,
       note: "AI-generated contractor search analysis",
-      payload: result,
+      payload: result as any,
     },
   });
 

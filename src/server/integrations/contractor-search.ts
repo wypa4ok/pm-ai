@@ -97,7 +97,6 @@ export async function searchExternalContractors(
           id: place.place_id,
           name: place.name,
           phone: place.formatted_phone_number,
-          website: place.website,
           rating: place.rating ?? undefined,
           reviewCount: place.user_ratings_total ?? undefined,
           address: place.formatted_address,

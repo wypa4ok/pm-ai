@@ -176,17 +176,30 @@ async function searchInternalContractors(
   analysis: ContractorSearchAnalysis,
 ): Promise<Contractor[]> {
   const keywords = analysis.keywords.join(" ");
-  const category = analysis.requiredTrade[0]; // Use first trade as primary category
+  const primaryTrade = analysis.requiredTrade[0]; // Use first trade as primary category
 
-  const results = await findContractors({
+  // First try: search with category filter
+  let results = await findContractors({
     search: keywords || analysis.specialty,
-    category,
+    category: primaryTrade,
     limit: 5,
   });
 
   console.log(
-    `Internal contractor search: found ${results.length} matches for "${keywords}" in category "${category}"`,
+    `Internal contractor search (with category): found ${results.length} matches for "${keywords}" in category "${primaryTrade}"`,
   );
+
+  // If no results found with category filter, try without category (broader search)
+  if (results.length === 0) {
+    results = await findContractors({
+      search: keywords || analysis.specialty || analysis.maintenanceType,
+      limit: 5,
+    });
+
+    console.log(
+      `Internal contractor search (without category): found ${results.length} matches for "${keywords || analysis.specialty || analysis.maintenanceType}"`,
+    );
+  }
 
   return results;
 }
