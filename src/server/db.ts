@@ -245,18 +245,20 @@ export async function findContractors(
   }
 
   if (filters.search) {
-    const term = filters.search.trim();
-    where.OR = [
-      { companyName: { contains: term, mode: "insensitive" } },
-      { contactName: { contains: term, mode: "insensitive" } },
-      { email: { contains: term, mode: "insensitive" } },
-      { phone: { contains: term, mode: "insensitive" } },
-      {
-        serviceAreas: {
-          has: term,
-        },
-      },
-    ];
+    const searchTerm = filters.search.trim();
+    // Split search term by spaces and search for each keyword
+    const keywords = searchTerm.split(/\s+/).filter(Boolean);
+
+    // Create OR conditions for each keyword across all searchable fields
+    const searchConditions: Prisma.ContractorWhereInput[] = keywords.flatMap(keyword => [
+      { companyName: { contains: keyword, mode: "insensitive" } },
+      { contactName: { contains: keyword, mode: "insensitive" } },
+      { email: { contains: keyword, mode: "insensitive" } },
+      { phone: { contains: keyword, mode: "insensitive" } },
+      { serviceAreas: { has: keyword } },
+    ]);
+
+    where.OR = searchConditions;
   }
 
   return tx.contractor.findMany({

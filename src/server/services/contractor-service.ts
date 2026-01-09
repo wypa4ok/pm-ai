@@ -142,17 +142,28 @@ export async function searchContractorsWithAI(
   // Step 2: Search internal contractors first
   const internalResults = await searchInternalContractors(analysis);
 
-  // Step 3: Determine if external search is needed
-  const shouldSearchExternal = input.forceExternal || internalResults.length === 0;
+  // Step 3: Always search external contractors to provide comparison options
+  // This allows users to see both internal and Google results
+  const externalResults = await searchExternalContractorsFromAnalysis(analysis, input.ticketId);
 
-  let externalResults: ExternalContractorProfile[] = [];
-  if (shouldSearchExternal) {
-    externalResults = await searchExternalContractorsFromAnalysis(analysis, input.ticketId);
-  }
+  // Step 4: Deduplicate - remove external contractors that match internal ones by name
+  const internalNames = new Set(
+    internalResults.map(c => c.companyName.toLowerCase().trim())
+  );
+
+  const deduplicatedExternalResults = externalResults.filter(ext => {
+    const extName = ext.name.toLowerCase().trim();
+    // Check if external contractor name is already in internal results
+    return !internalNames.has(extName);
+  });
+
+  console.log(
+    `Deduplication: ${externalResults.length} external contractors -> ${deduplicatedExternalResults.length} after removing duplicates`
+  );
 
   // Determine source
   let source: "internal" | "external" | "both";
-  if (internalResults.length > 0 && externalResults.length > 0) {
+  if (internalResults.length > 0 && deduplicatedExternalResults.length > 0) {
     source = "both";
   } else if (internalResults.length > 0) {
     source = "internal";
@@ -163,8 +174,8 @@ export async function searchContractorsWithAI(
   return {
     analysis,
     internalContractors: internalResults,
-    externalContractors: externalResults,
-    usedExternal: externalResults.length > 0,
+    externalContractors: deduplicatedExternalResults,
+    usedExternal: deduplicatedExternalResults.length > 0,
     source,
   };
 }
