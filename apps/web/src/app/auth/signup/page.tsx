@@ -54,12 +54,13 @@ export default function SignUpPage() {
         return;
       }
 
-      // After successful signup, redirect to return URL or home
+      // After successful signup, redirect to onboarding or return URL
       const returnUrl = searchParams.get("returnUrl");
       if (returnUrl) {
         router.push(decodeURIComponent(returnUrl));
       } else {
-        router.push("/");
+        // Redirect to onboarding for new landlords
+        router.push("/onboarding");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during sign up");
@@ -71,11 +72,15 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Create Your Account</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {searchParams.get("email")
+              ? "Create Your Account"
+              : "Start Managing Your Properties"}
+          </h1>
           <p className="mt-2 text-sm text-slate-600">
             {searchParams.get("email")
               ? "Complete your registration to access your tenant portal"
-              : "Sign up to get started"}
+              : "Join hundreds of landlords managing their properties more efficiently"}
           </p>
         </div>
 

@@ -81,20 +81,27 @@ enum AgentEventType {
 }
 
 model User {
-  id            String       @id @default(uuid()) @db.Uuid
-  email         String       @unique
-  fullName      String       @map("full_name")
-  role          UserRole     @default(AGENT)
-  avatarUrl     String?      @map("avatar_url")
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-  tickets       Ticket[]     @relation("TicketAssignee")
-  messages      Message[]    @relation("MessageAuthor")
-  ownedTickets  Ticket[]     @relation("TicketOwner")
-  ownedMessages Message[]    @relation("MessageOwner")
-  ownedUnits    Unit[]       @relation("UnitOwner")
-  ownedTenants  Tenant[]     @relation("OwnerTenants")
-  agentEvents   AgentEvent[] @relation("AgentEventAuthor")
+  id                  String       @id @default(uuid()) @db.Uuid
+  email               String       @unique
+  fullName            String       @map("full_name")
+  role                UserRole     @default(AGENT)
+  avatarUrl           String?      @map("avatar_url")
+
+  // Landlord onboarding fields
+  onboardingCompleted Boolean      @default(false) @map("onboarding_completed")
+  companyName         String?      @map("company_name")
+  phone               String?
+
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  tickets             Ticket[]     @relation("TicketAssignee")
+  messages            Message[]    @relation("MessageAuthor")
+  ownedTickets        Ticket[]     @relation("TicketOwner")
+  ownedMessages       Message[]    @relation("MessageOwner")
+  ownedUnits          Unit[]       @relation("UnitOwner")
+  ownedTenants        Tenant[]     @relation("OwnerTenants")
+  agentEvents         AgentEvent[] @relation("AgentEventAuthor")
 
   @@map("users")
 }

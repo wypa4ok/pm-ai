@@ -1,13 +1,17 @@
 import { NextRequest } from "next/server";
 import { errorResponse } from "../errors";
 import { getSupabaseAdmin } from "../../auth/supabase-client";
+import { getOrCreateUser } from "../../services/user-sync";
+import { UserRole } from "@prisma/client";
 
 export type AuthedRequest = NextRequest & {
   auth: {
     user: {
       id: string;
-      email?: string;
-      [key: string]: unknown;
+      email: string;
+      fullName: string;
+      role: UserRole;
+      onboardingCompleted: boolean;
     };
     accessToken: string;
   };
@@ -48,13 +52,20 @@ export async function withAuth(
       return errorResponse("unauthorized", "Invalid or expired token", 401);
     }
 
+    if (!data.user.email) {
+      return errorResponse("unauthorized", "User email is required", 401);
+    }
+
+    // Sync user to database and get/create user record
+    const dbUser = await getOrCreateUser({
+      supabaseUserId: data.user.id,
+      email: data.user.email,
+      fullName: data.user.user_metadata?.name || data.user.user_metadata?.full_name,
+    });
+
     const authed = request as AuthedRequest;
     authed.auth = {
-      user: {
-        id: data.user.id,
-        email: data.user.email ?? undefined,
-        ...(data.user.user_metadata ?? {}),
-      },
+      user: dbUser,
       accessToken: token,
     };
     return authed;

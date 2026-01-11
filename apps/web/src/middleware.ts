@@ -5,6 +5,7 @@ import {
   fetchSupabaseUser,
   type SessionRole,
 } from "./server/session/role";
+import { prisma } from "~/server/db";
 
 const OWNER_HOME = "/home";
 const TENANT_HOME = "/tenant";
@@ -32,6 +33,25 @@ export async function middleware(request: NextRequest) {
     roles,
     request.cookies.get(ACTIVE_ROLE_COOKIE)?.value,
   );
+
+  // Check if user has completed onboarding (OWNER role only)
+  if (roles.includes("OWNER") && pathname !== "/onboarding") {
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { onboardingCompleted: true },
+      });
+
+      if (dbUser && !dbUser.onboardingCompleted) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/onboarding";
+        return NextResponse.redirect(url);
+      }
+    } catch (error) {
+      console.error("Onboarding check error:", error);
+      // Continue without onboarding check on error
+    }
+  }
 
   // Allow "/" to be accessed directly - it has its own dashboard page
   if (pathname === "/app") {
@@ -75,7 +95,8 @@ function isPublicPath(pathname: string) {
     pathname === "/favicon.ico" ||
     pathname === "/login" ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/invite/")
+    pathname.startsWith("/invite/") ||
+    pathname === "/onboarding"
   );
 }
 
