@@ -39,12 +39,22 @@ export async function createUnit(input: CreateUnitInput) {
   return unit;
 }
 
+export type ListUnitsFilters = {
+  ownerUserId?: string;
+  limit?: number;
+  offset?: number;
+};
+
 /**
- * Get all units for listing
+ * Get units for listing with owner filtering and pagination
+ * IMPORTANT: Always filter by ownerUserId to prevent cross-landlord data leakage
  */
-export async function listUnits(): Promise<UnitListItem[]> {
+export async function listUnits(filters: ListUnitsFilters = {}): Promise<UnitListItem[]> {
   const units = await prisma.unit.findMany({
+    where: filters.ownerUserId ? { ownerUserId: filters.ownerUserId } : undefined,
     orderBy: { name: "asc" },
+    take: filters.limit ?? 50,
+    skip: filters.offset ?? 0,
     select: {
       id: true,
       name: true,

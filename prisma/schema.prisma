@@ -93,6 +93,7 @@ model User {
   ownedTickets  Ticket[]     @relation("TicketOwner")
   ownedMessages Message[]    @relation("MessageOwner")
   ownedUnits    Unit[]       @relation("UnitOwner")
+  ownedTenants  Tenant[]     @relation("OwnerTenants")
   agentEvents   AgentEvent[] @relation("AgentEventAuthor")
 
   @@map("users")
@@ -123,6 +124,7 @@ model Unit {
 
 model Tenant {
   id        String   @id @default(uuid()) @db.Uuid
+  ownerUserId String @map("owner_user_id") @db.Uuid
   unitId    String?  @map("unit_id") @db.Uuid
   unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   firstName String   @map("first_name")
@@ -133,6 +135,8 @@ model Tenant {
   userId    String?  @unique @map("user_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner            User            @relation("OwnerTenants", fields: [ownerUserId], references: [id], onDelete: Restrict)
   tickets          Ticket[]
   linkedTickets    Ticket[]        @relation("TenantAccount")
   invites          TenantInvite[]
@@ -141,6 +145,7 @@ model Tenant {
   @@index([unitId])
   @@index([email])
   @@index([userId])
+  @@index([ownerUserId])
   @@map("tenants")
 }
 

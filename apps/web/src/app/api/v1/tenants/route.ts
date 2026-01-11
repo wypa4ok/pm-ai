@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tenants = await tenancyService.listTenants();
+  // CRITICAL: Filter tenants by authenticated user to prevent cross-landlord data leakage
+  // NOTE: This requires ownerUserId field on Tenant model (Task 1.2)
+  const tenants = await tenancyService.listTenants({
+    ownerUserId: authed.auth.user.id,
+  });
 
   return NextResponse.json({
     tenants,

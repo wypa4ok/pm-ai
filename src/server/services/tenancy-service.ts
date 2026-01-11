@@ -62,12 +62,22 @@ export async function createTenancy(input: CreateTenancyInput) {
   return tenancy;
 }
 
+export type ListTenantsFilters = {
+  ownerUserId?: string;
+  limit?: number;
+  offset?: number;
+};
+
 /**
- * Get all tenants for listing
+ * Get tenants for listing with owner filtering and pagination
+ * IMPORTANT: Always filter by ownerUserId to prevent cross-landlord data leakage
  */
-export async function listTenants(): Promise<TenantListItem[]> {
+export async function listTenants(filters: ListTenantsFilters = {}): Promise<TenantListItem[]> {
   const tenants = await prisma.tenant.findMany({
+    where: filters.ownerUserId ? { ownerUserId: filters.ownerUserId } : undefined,
     orderBy: { createdAt: "desc" },
+    take: filters.limit ?? 50,
+    skip: filters.offset ?? 0,
     select: {
       id: true,
       firstName: true,

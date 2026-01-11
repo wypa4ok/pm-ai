@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const units = await unitService.listUnits();
+  // CRITICAL: Filter units by authenticated user to prevent cross-landlord data leakage
+  const units = await unitService.listUnits({
+    ownerUserId: authed.auth.user.id,
+  });
 
   return NextResponse.json({
     units,
