@@ -6,6 +6,7 @@ import { applyCors } from "~/server/api/middleware/cors";
 import { rateLimit } from "~/server/api/middleware/rate-limit";
 import { prisma } from "~/server/db";
 import { getUserRoles } from "~/server/services/user-roles";
+import { authorizeTenancyOwnership, AuthorizationError } from "~/server/services/authorization";
 
 const updateSchema = z.object({
   endDate: z.string().datetime().or(z.date()).optional().nullable(),
@@ -43,6 +44,16 @@ export async function GET(
       "Only property owners can access tenancies",
       403
     );
+  }
+
+  // Verify ownership before allowing access
+  try {
+    await authorizeTenancyOwnership(authed.auth.user.id, params.id);
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      return errorResponse("forbidden", error.message, 403);
+    }
+    throw error;
   }
 
   const tenancy = await prisma.tenancy.findUnique({
@@ -132,13 +143,26 @@ export async function PATCH(
   const authed = await withAuth(request);
   if (authed instanceof Response) return authed;
 
+  // Get user roles from database
+  const roles = await getUserRoles(authed.auth.user.id);
+
   // Enforce OWNER role
-  if (!authed.auth.roles.includes("OWNER")) {
+  if (!roles.includes("OWNER")) {
     return errorResponse(
       "forbidden",
       "Only property owners can update tenancies",
       403
     );
+  }
+
+  // Verify ownership before allowing mutation
+  try {
+    await authorizeTenancyOwnership(authed.auth.user.id, params.id);
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      return errorResponse("forbidden", error.message, 403);
+    }
+    throw error;
   }
 
   const json = await request.json().catch(() => null);

@@ -40,7 +40,10 @@ export async function GET(request: NextRequest) {
   const tenancyId = searchParams.get("tenancyId") ?? undefined;
   const tenantEmail = searchParams.get("tenantEmail") ?? undefined;
   const tenantUserId = searchParams.get("tenantUserId") ?? undefined;
-  const limit = Number(searchParams.get("limit") ?? "50");
+
+  // Parse pagination parameters
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
 
   const tickets = await ticketService.listTickets({
     status,
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
     tenancyId,
     tenantEmail,
     tenantUserId,
-    limit: Number.isFinite(limit) && limit > 0 ? limit : 50,
+    limit,
     ownerUserId: authed.auth.user.id,
   });
 
@@ -72,6 +75,11 @@ export async function GET(request: NextRequest) {
         ticket.messages[0]?.bodyHtml ??
         undefined,
     })),
+    pagination: {
+      page,
+      limit,
+      hasMore: tickets.length === limit,
+    },
   });
 }
 

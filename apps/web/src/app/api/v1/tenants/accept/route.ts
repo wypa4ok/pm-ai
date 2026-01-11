@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "../../../../../../../../src/server/db";
 import { errorResponse } from "../../../../../../../../src/server/api/errors";
+import { invalidateUserRoleCache } from "../../../../../../../../src/server/services/user-roles";
 
 const schema = z.object({
   tenantId: z.string().uuid(),
@@ -136,6 +137,9 @@ export async function POST(request: NextRequest) {
       },
     }),
   ]);
+
+  // Invalidate role cache - user is now a TENANT
+  invalidateUserRoleCache(userId);
 
   // Update Supabase user metadata to include TENANT role
   if (supabaseUrl && supabaseServiceKey) {

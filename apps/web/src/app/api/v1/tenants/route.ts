@@ -28,14 +28,26 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Parse pagination parameters
+  const { searchParams } = new URL(request.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
+  const offset = (page - 1) * limit;
+
   // CRITICAL: Filter tenants by authenticated user to prevent cross-landlord data leakage
-  // NOTE: This requires ownerUserId field on Tenant model (Task 1.2)
   const tenants = await tenancyService.listTenants({
     ownerUserId: authed.auth.user.id,
+    limit,
+    offset,
   });
 
   return NextResponse.json({
     tenants,
+    pagination: {
+      page,
+      limit,
+      hasMore: tenants.length === limit,
+    },
   });
 }
 

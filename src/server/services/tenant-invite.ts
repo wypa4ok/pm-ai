@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../db";
 import { sendTenantInviteEmail } from "../integrations/invite-email";
+import { invalidateUserRoleCache } from "./user-roles";
 
 type InviteInput = {
   ownerUserId: string;
@@ -25,8 +26,12 @@ export async function createTenantInvite(input: InviteInput) {
         lastName: input.lastName,
         email,
         unitId: input.unitId || null,
+        ownerUserId: input.ownerUserId,
       },
     });
+
+    // Invalidate role cache - user now owns a tenant
+    invalidateUserRoleCache(input.ownerUserId);
   } else {
     tenant = await prisma.tenant.update({
       where: { id: tenant.id },

@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { invalidateUserRoleCache } from "./user-roles";
 
 export type CreateUnitInput = {
   ownerUserId: string;
@@ -21,6 +22,7 @@ export type UnitListItem = {
 
 /**
  * Create a new unit (property)
+ * Invalidates role cache since user is now definitely an OWNER
  */
 export async function createUnit(input: CreateUnitInput) {
   const unit = await prisma.unit.create({
@@ -35,6 +37,9 @@ export async function createUnit(input: CreateUnitInput) {
       notes: input.notes || null,
     },
   });
+
+  // Invalidate role cache - user is now an OWNER
+  invalidateUserRoleCache(input.ownerUserId);
 
   return unit;
 }

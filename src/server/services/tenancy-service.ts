@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { createTenantInvite } from "./tenant-invite";
+import { invalidateUserRoleCache } from "./user-roles";
 
 export type TenancyMemberInput = {
   tenantId: string;
@@ -98,6 +99,7 @@ export async function createTenant(input: {
   email: string;
   phone?: string;
   unitId?: string;
+  ownerUserId: string;
 }) {
   const email = input.email.trim().toLowerCase();
 
@@ -117,8 +119,12 @@ export async function createTenant(input: {
       email,
       phone: input.phone?.trim() || null,
       unitId: input.unitId || null,
+      ownerUserId: input.ownerUserId,
     },
   });
+
+  // Invalidate role cache - user now owns a tenant
+  invalidateUserRoleCache(input.ownerUserId);
 
   return tenant;
 }
@@ -221,8 +227,12 @@ export async function addTenantMember(
         lastName: input.lastName,
         email,
         unitId: tenancy.unitId,
+        ownerUserId,
       },
     });
+
+    // Invalidate role cache - user now owns a tenant
+    invalidateUserRoleCache(ownerUserId);
   }
 
   // Add to tenancy

@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import type { TicketCategory, TicketPriority, MessageChannel } from "@prisma/client";
 import { searchTickets } from "../search/tickets";
+import { invalidateUserRoleCache } from "./user-roles";
 
 export type CreateTicketInput = {
   subject: string;
@@ -85,6 +86,9 @@ export async function createTicket(input: CreateTicketInput) {
       unitId: input.unitId ?? null,
     },
   });
+
+  // Invalidate role cache - user now has created a ticket (legacy OWNER check)
+  invalidateUserRoleCache(input.ownerUserId);
 
   return ticket;
 }
