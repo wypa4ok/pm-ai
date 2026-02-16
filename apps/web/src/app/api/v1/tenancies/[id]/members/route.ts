@@ -7,6 +7,7 @@ import { rateLimit } from "~/server/api/middleware/rate-limit";
 import { prisma } from "~/server/db";
 import { createTenantInvite } from "~/server/services/tenant-invite";
 import { getUserRoles } from "~/server/services/user-roles";
+import { authorizeTenancyOwnership } from "~/server/services/authorization";
 
 const addMemberSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -75,6 +76,17 @@ export async function POST(
     return errorResponse("not_found", "Tenancy not found", 404);
   }
 
+  // Verify user owns this tenancy
+  try {
+    await authorizeTenancyOwnership(authed.auth.user.id, params.id);
+  } catch (error) {
+    return errorResponse(
+      "forbidden",
+      error instanceof Error ? error.message : "You do not own this tenancy",
+      403,
+    );
+  }
+
   const email = data.email.trim().toLowerCase();
 
   // Check if tenant with this email already exists in this tenancy
@@ -114,6 +126,7 @@ export async function POST(
         lastName: data.lastName,
         email,
         unitId: tenancy.unitId,
+        ownerUserId: authed.auth.user.id,
       },
     });
   } else {
@@ -156,8 +169,8 @@ export async function POST(
   if (data.sendInvite && !tenant.userId) {
     try {
       const result = await createTenantInvite({
-        ownerUserId: authed.auth.userId,
-        ownerEmail: authed.auth.email,
+        ownerUserId: authed.auth.user.id,
+        ownerEmail: authed.auth.user.email ?? undefined,
         firstName: data.firstName,
         lastName: data.lastName,
         email,
