@@ -5,6 +5,7 @@ import { withAuth } from "~/server/api/middleware/auth";
 import { createTenantInvite } from "~/server/services/tenant-invite";
 import { authorizeUnitOwnership } from "~/server/services/authorization";
 import { getUserRoles } from "~/server/services/user-roles";
+import { logger } from "~/server/lib/logger";
 
 const schema = z.object({
   firstName: z.string().min(2),
@@ -38,6 +39,12 @@ export async function POST(request: NextRequest) {
     try {
       await authorizeUnitOwnership(authed.auth.user.id, parsed.data.unitId);
     } catch (error) {
+      logger.warn("Unit ownership authorization failed", {
+        userId: authed.auth.user.id,
+        endpoint: "/api/v1/tenants/invite",
+        unitId: parsed.data.unitId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return errorResponse(
         "forbidden",
         error instanceof Error ? error.message : "You do not own this unit",
@@ -46,15 +53,36 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const invite = await createTenantInvite({
-    ownerUserId: authed.auth.user.id,
-    ownerEmail: authed.auth.user.email ?? undefined,
-    ...parsed.data,
-  });
+  try {
+    const invite = await createTenantInvite({
+      ownerUserId: authed.auth.user.id,
+      ownerEmail: authed.auth.user.email ?? undefined,
+      ...parsed.data,
+    });
 
-  return NextResponse.json({
-    tenantId: invite.tenant.id,
-    inviteLink: invite.inviteLink,
-    expiresAt: invite.expiresAt,
-  });
+    logger.info("Tenant invite created successfully", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/tenants/invite",
+      tenantId: invite.tenant.id,
+      tenantEmail: parsed.data.email,
+    });
+
+    return NextResponse.json({
+      tenantId: invite.tenant.id,
+      inviteLink: invite.inviteLink,
+      expiresAt: invite.expiresAt,
+    });
+  } catch (error) {
+    logger.error("Failed to create tenant invite", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/tenants/invite",
+      tenantEmail: parsed.data.email,
+      unitId: parsed.data.unitId,
+    }, error);
+    return errorResponse(
+      "internal_error",
+      "Failed to create invite. Please try again.",
+      500,
+    );
+  }
 }

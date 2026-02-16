@@ -3,6 +3,7 @@ import { z } from "zod";
 import { errorResponse } from "~/server/api/errors";
 import { withAuth } from "~/server/api/middleware/auth";
 import { prisma } from "~/server/db";
+import { logger } from "~/server/lib/logger";
 
 const schema = z.object({
   companyName: z.string().optional().nullable(),
@@ -41,12 +42,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    logger.info("Onboarding completed successfully", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/onboarding/complete",
+      companyName: companyName ?? undefined,
+    });
+
     return NextResponse.json({
       success: true,
       message: "Onboarding completed successfully",
     });
   } catch (error) {
-    console.error("Onboarding completion error:", error);
+    logger.error("Onboarding completion failed", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/onboarding/complete",
+    }, error);
     return errorResponse(
       "internal_error",
       "Failed to complete onboarding",

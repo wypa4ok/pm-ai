@@ -8,6 +8,7 @@ import { prisma } from "~/server/db";
 import { createTenantInvite } from "~/server/services/tenant-invite";
 import { getUserRoles } from "~/server/services/user-roles";
 import { authorizeTenancyOwnership } from "~/server/services/authorization";
+import { logger } from "~/server/lib/logger";
 
 const addMemberSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -80,6 +81,12 @@ export async function POST(
   try {
     await authorizeTenancyOwnership(authed.auth.user.id, params.id);
   } catch (error) {
+    logger.warn("Tenancy ownership authorization failed", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/tenancies/[id]/members",
+      tenancyId: params.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return errorResponse(
       "forbidden",
       error instanceof Error ? error.message : "You do not own this tenancy",
@@ -115,52 +122,69 @@ export async function POST(
   }
 
   // Find or create tenant
-  let tenant = await prisma.tenant.findFirst({
-    where: { email },
-  });
+  let tenant;
+  let member;
 
-  if (!tenant) {
-    tenant = await prisma.tenant.create({
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email,
-        unitId: tenancy.unitId,
-        ownerUserId: authed.auth.user.id,
-      },
+  try {
+    tenant = await prisma.tenant.findFirst({
+      where: { email },
     });
-  } else {
-    // Update tenant info if exists
-    tenant = await prisma.tenant.update({
-      where: { id: tenant.id },
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email,
-      },
-    });
-  }
 
-  // Add tenant to tenancy
-  const member = await prisma.tenancyMember.create({
-    data: {
-      tenancyId: tenancy.id,
-      tenantId: tenant.id,
-      isPrimary: data.isPrimary,
-    },
-    include: {
-      tenant: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          phone: true,
-          userId: true,
+    if (!tenant) {
+      tenant = await prisma.tenant.create({
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email,
+          unitId: tenancy.unitId,
+          ownerUserId: authed.auth.user.id,
+        },
+      });
+    } else {
+      // Update tenant info if exists
+      tenant = await prisma.tenant.update({
+        where: { id: tenant.id },
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email,
+        },
+      });
+    }
+
+    // Add tenant to tenancy
+    member = await prisma.tenancyMember.create({
+      data: {
+        tenancyId: tenancy.id,
+        tenantId: tenant.id,
+        isPrimary: data.isPrimary,
+      },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            userId: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    logger.error("Failed to add tenancy member", {
+      userId: authed.auth.user.id,
+      endpoint: "/api/v1/tenancies/[id]/members",
+      tenancyId: params.id,
+      email,
+    }, error);
+    return errorResponse(
+      "internal_error",
+      "Failed to add member to tenancy",
+      500,
+    );
+  }
 
   // Send invite if requested and tenant doesn't have portal access yet
   let inviteLink: string | undefined;
@@ -179,10 +203,24 @@ export async function POST(
       inviteLink = result.inviteLink;
       inviteExpiresAt = result.expiresAt;
     } catch (error) {
-      console.error("Failed to send invite:", error);
+      logger.warn("Failed to send tenant invite after adding member", {
+        userId: authed.auth.user.id,
+        endpoint: "/api/v1/tenancies/[id]/members",
+        tenancyId: params.id,
+        tenantId: tenant.id,
+        email,
+      }, error);
       // Don't fail the request if invite fails
     }
   }
+
+  logger.info("Tenancy member added successfully", {
+    userId: authed.auth.user.id,
+    endpoint: "/api/v1/tenancies/[id]/members",
+    tenancyId: params.id,
+    tenantId: tenant.id,
+    isPrimary: data.isPrimary,
+  });
 
   return NextResponse.json(
     {
