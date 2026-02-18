@@ -1,7 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "framework": "nextjs",
+  "buildCommand": "cd apps/web && npm run build",
+  "devCommand": "cd apps/web && npm run dev",
   "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": "apps/web/.next",
   "regions": ["iad1"],
   "env": {
     "NODE_VERSION": "18.x"
