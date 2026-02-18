@@ -102,7 +102,7 @@ export async function POST(
       tone,
     });
 
-    console.log(`[AI Message Generator] Generated message for ${contractor.name}`);
+    console.log(`[AI Message Generator] Generated message for ${"companyName" in contractor ? contractor.companyName : contractor.name}`);
 
     return NextResponse.json({
       subject: message.subject,

@@ -49,7 +49,7 @@ export function deriveRoles(user?: SupabaseAuthUser | null): SessionRole[] {
   // Check metadata for explicitly set roles
   const fromUser = extractRoles(user?.user_metadata);
   const fromApp = extractRoles(user?.app_metadata);
-  const metadataRoles = [...new Set([...fromUser, ...fromApp])];
+  const metadataRoles = Array.from(new Set([...fromUser, ...fromApp]));
 
   // If roles are explicitly set in metadata, use those
   if (metadataRoles.length > 0) {

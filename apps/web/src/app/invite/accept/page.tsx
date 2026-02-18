@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams()!;
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
   const [message, setMessage] = useState("Processing your invite...");
 
@@ -152,5 +152,13 @@ export default function AcceptInvitePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense>
+      <AcceptInviteContent />
+    </Suspense>
   );
 }

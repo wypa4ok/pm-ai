@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         ? `${ticket.tenant.firstName} ${ticket.tenant.lastName}`
         : undefined,
       unitName: ticket.unit?.name ?? undefined,
-      latestMessageSnippet: ticket.messages[0]?.snippet ?? ticket.messages[0]?.bodyText ?? undefined,
+      latestMessageSnippet: ticket.messages[0]?.bodyText ?? undefined,
     })),
   });
 }

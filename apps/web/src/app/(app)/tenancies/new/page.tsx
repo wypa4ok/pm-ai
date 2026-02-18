@@ -371,7 +371,7 @@ export default function NewTenancyPage() {
               </select>
               {units.length === 0 && (
                 <p className="mt-2 text-xs text-slate-500">
-                  Click "Create New Unit" to add your first property
+                  Click &quot;Create New Unit&quot; to add your first property
                 </p>
               )}
             </div>
@@ -562,7 +562,7 @@ export default function NewTenancyPage() {
                     </select>
                     {tenants.length === 0 && !showNewTenantForm && (
                       <p className="mt-1 text-xs text-slate-500">
-                        No tenants available. Click "Create New Tenant" to add one.
+                        No tenants available. Click &quot;Create New Tenant&quot; to add one.
                       </p>
                     )}
                   </div>
@@ -613,7 +613,7 @@ export default function NewTenancyPage() {
 
           <p className="mt-4 text-xs text-slate-500">
             At least one tenant member is required. You can add more tenants
-            after creating the tenancy using the "Add Tenant" button.
+            after creating the tenancy using the &quot;Add Tenant&quot; button.
           </p>
         </section>
 

@@ -75,7 +75,7 @@ CONTEXT:
 - Property: ${property}
 - Tenant: ${tenantInfo}
 - Priority: ${ticket.priority}
-- Contractor: ${contractor.name}
+- Contractor: ${"companyName" in contractor ? contractor.companyName : contractor.name}
 ${urgencyNote}
 
 TONE: ${toneGuidance[tone]}
@@ -118,9 +118,9 @@ OUTPUT FORMAT (JSON only, no markdown):
     data: {
       ticketId: ticket.id,
       type: "MESSAGE_GENERATED",
-      note: `AI-generated contractor outreach to ${contractor.name}`,
+      note: `AI-generated contractor outreach to ${"companyName" in contractor ? contractor.companyName : contractor.name}`,
       payload: {
-        contractorId: "id" in contractor ? contractor.id : contractor.name,
+        contractorId: contractor.id,
         subject: result.subject,
         bodyPreview: result.body.substring(0, 100),
       },
@@ -134,7 +134,7 @@ OUTPUT FORMAT (JSON only, no markdown):
       generatedAt: new Date().toISOString(),
       model: "gpt-4o-mini",
       tokensUsed: response.usage?.total_tokens || 0,
-      contractorName: contractor.name,
+      contractorName: "companyName" in contractor ? contractor.companyName : contractor.name,
       contractorSource: "source" in contractor ? contractor.source : "internal",
     },
   };

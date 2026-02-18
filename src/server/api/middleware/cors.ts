@@ -42,9 +42,9 @@ export function withCors(
     headers.set("access-control-allow-origin", origin);
   }
 
-  for (const [key, value] of headers) {
+  headers.forEach((value, key) => {
     request.headers.set(key, value);
-  }
+  });
 
   return undefined;
 }

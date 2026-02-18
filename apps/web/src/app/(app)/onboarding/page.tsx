@@ -48,7 +48,7 @@ export default function OnboardingPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Welcome to Your Property Management Platform</h1>
           <p className="mt-2 text-slate-600">
-            Let's get your account set up so you can start managing your properties
+            Let&apos;s get your account set up so you can start managing your properties
           </p>
         </div>
 
@@ -133,7 +133,7 @@ export default function OnboardingPage() {
         </form>
 
         <div className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">What's Next?</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">What&apos;s Next?</h2>
           <ul className="space-y-2 text-sm text-slate-600">
             <li className="flex items-start">
               <svg className="h-5 w-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">

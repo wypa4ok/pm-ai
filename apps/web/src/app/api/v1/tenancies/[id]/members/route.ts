@@ -209,7 +209,8 @@ export async function POST(
         tenancyId: params.id,
         tenantId: tenant.id,
         email,
-      }, error);
+        error: error instanceof Error ? error.message : String(error),
+      });
       // Don't fail the request if invite fails
     }
   }

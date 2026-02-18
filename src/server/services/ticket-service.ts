@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import type { TicketCategory, TicketPriority, MessageChannel } from "@prisma/client";
+import type { TicketCategory, TicketPriority, TicketStatus, MessageChannel } from "@prisma/client";
 import { searchTickets } from "../search/tickets";
 import { invalidateUserRoleCache } from "./user-roles";
 
@@ -103,7 +103,7 @@ export async function updateTicket(
     description?: string;
     category?: TicketCategory;
     priority?: TicketPriority;
-    status?: string;
+    status?: TicketStatus;
   }
 ) {
   const ticket = await prisma.ticket.update({

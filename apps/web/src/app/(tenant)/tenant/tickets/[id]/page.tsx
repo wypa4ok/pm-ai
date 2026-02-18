@@ -105,7 +105,7 @@ export default function TenantTicketDetailPage({ params }: TenantTicketDetailPag
   if (!ticket) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-slate-500">
-        <p>Ticket not found or you don't have access to it.</p>
+        <p>Ticket not found or you don&apos;t have access to it.</p>
         <a
           href="/tenant/tickets"
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"

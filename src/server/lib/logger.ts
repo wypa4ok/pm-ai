@@ -14,7 +14,7 @@ interface LogContext {
 
 function log(level: LogLevel, message: string, context?: LogContext, error?: unknown) {
   const timestamp = new Date().toISOString();
-  const logEntry = {
+  const logEntry: Record<string, unknown> = {
     timestamp,
     level: level.toUpperCase(),
     message,

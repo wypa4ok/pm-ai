@@ -129,7 +129,7 @@ async function uploadAttachments(
       const path = `tickets/${ticketId}/${Date.now()}-${attachment.filename}`;
       const { signedUrl, expiresAt } = await storage.putObject({
         path,
-        body: attachment.data,
+        body: attachment.data ?? Buffer.alloc(0),
         contentType: attachment.mimeType,
         cacheControl: "3600",
       });

@@ -26,14 +26,6 @@ async function getAuthenticatedOwner() {
     select: { id: true },
   });
 
-  if (!ownerCheck) {
-    // Also check if they have created units as an alternative
-    const unitCheck = await prisma.unit.findFirst({
-      where: { createdAt: { not: null } }, // Simple check - in real app would have ownerId
-      select: { id: true },
-    });
-  }
-
   return { user, email: user.email || "" };
 }
 
@@ -46,9 +38,9 @@ export async function createUnit(formData: {
   postalCode: string;
   notes?: string;
 }) {
-  await getAuthenticatedOwner();
+  const { user } = await getAuthenticatedOwner();
 
-  const unit = await unitService.createUnit(formData);
+  const unit = await unitService.createUnit({ ...formData, ownerUserId: user.id });
 
   revalidatePath("/tenancies/new");
   return { success: true, unit };
@@ -61,20 +53,20 @@ export async function createTenant(formData: {
   phone?: string;
   unitId?: string;
 }) {
-  await getAuthenticatedOwner();
+  const { user } = await getAuthenticatedOwner();
 
-  const tenant = await tenancyService.createTenant(formData);
+  const tenant = await tenancyService.createTenant({ ...formData, ownerUserId: user.id });
 
   revalidatePath("/tenancies/new");
   return { success: true, tenant };
 }
 
 export async function getUnitsAndTenants() {
-  await getAuthenticatedOwner();
+  const { user } = await getAuthenticatedOwner();
 
   const [units, tenants] = await Promise.all([
-    unitService.listUnits(),
-    tenancyService.listTenants(),
+    unitService.listUnits({ ownerUserId: user.id }),
+    tenancyService.listTenants({ ownerUserId: user.id }),
   ]);
 
   return { units, tenants };

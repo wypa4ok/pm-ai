@@ -136,7 +136,7 @@ export class SupabaseStorageAdapter implements Storage {
 
     const { data, error } = await this.client.storage
       .from(bucket)
-      .createSignedUploadUrl(path, expires);
+      .createSignedUploadUrl(path, { upsert: false });
 
     if (error || !data?.signedUrl || !data.path || !data.token) {
       throw new Error(

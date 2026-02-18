@@ -197,8 +197,8 @@ export async function POST(request: NextRequest) {
   // Create the tenancy with members using the service
   const tenancy = await tenancyService.createTenancy({
     unitId: data.unitId,
-    startDate: data.startDate,
-    endDate: data.endDate ?? null,
+    startDate: data.startDate instanceof Date ? data.startDate.toISOString() : data.startDate,
+    endDate: data.endDate instanceof Date ? data.endDate.toISOString() : (data.endDate ?? null),
     notes: data.notes ?? null,
     members: data.members.map((m) => ({
       tenantId: m.tenantId,

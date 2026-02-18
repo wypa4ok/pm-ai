@@ -40,6 +40,7 @@ export interface UpsertTenantInput {
   phone?: string | null;
   unitId?: string | null;
   notes?: string | null;
+  ownerUserId?: string | null;
 }
 
 export async function upsertTenant(
@@ -61,13 +62,14 @@ export async function upsertTenant(
         })
       : null;
 
-  const data: Prisma.TenantCreateInput = {
+  const data: Prisma.TenantUncheckedCreateInput = {
     firstName: input.firstName,
     lastName: input.lastName,
     email: normalizedEmail,
     phone: normalizedPhone,
     notes: input.notes ?? null,
-    unit: input.unitId ? { connect: { id: input.unitId } } : undefined,
+    unitId: input.unitId ?? undefined,
+    ownerUserId: input.ownerUserId ?? "",
   };
 
   if (!existingTenant) {
@@ -76,14 +78,7 @@ export async function upsertTenant(
 
   return tx.tenant.update({
     where: { id: existingTenant.id },
-    data: {
-      ...data,
-      unit: input.unitId
-        ? { connect: { id: input.unitId } }
-        : input.unitId === null
-          ? { disconnect: true }
-          : undefined,
-    },
+    data,
   });
 }
 
@@ -132,7 +127,9 @@ export async function attachToTicket(
   }
 
   if (input.tenantUserId !== undefined) {
-    data.tenantUserId = input.tenantUserId ?? null;
+    data.tenantAccount = input.tenantUserId
+      ? { connect: { userId: input.tenantUserId } }
+      : { disconnect: true };
   }
 
   if (input.status) data.status = input.status;

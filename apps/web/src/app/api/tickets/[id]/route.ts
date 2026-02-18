@@ -35,7 +35,6 @@ export async function GET(
         : undefined,
       unitName: ticket.unit?.name ?? undefined,
       latestMessageSnippet:
-        ticket.messages[0]?.snippet ??
         ticket.messages[0]?.bodyText ??
         ticket.messages[0]?.bodyHtml ??
         undefined,

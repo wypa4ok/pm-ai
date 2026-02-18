@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { errorResponse } from "../errors";
 
 type RateLimitBucket = {
@@ -20,7 +20,7 @@ function keyFromRequest(request: NextRequest) {
   return `ip:${ip}`;
 }
 
-export function rateLimit(request: NextRequest): NextResponse | null {
+export function rateLimit(request: NextRequest): Response | null {
   const key = keyFromRequest(request);
   const now = Date.now();
   const bucket = BUCKETS.get(key);
