@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ACTIVE_ROLE_COOKIE } from "../../../server/session/role";

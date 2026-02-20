@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest } from "next/server";
 import { handleSignUpload } from "../../../../../../../../src/server/api/uploads";
 import { withAuth } from "../../../../../../../../src/server/api/middleware/auth";

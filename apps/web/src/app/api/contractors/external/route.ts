@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { searchExternalContractors } from "../../../../../../../src/server/integrations/contractor-search";
 

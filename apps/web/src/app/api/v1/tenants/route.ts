@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "~/server/api/errors";
 import { withAuth } from "~/server/api/middleware/auth";

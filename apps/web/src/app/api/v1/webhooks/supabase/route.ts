@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { syncUser, deleteUser } from "~/server/services/user-sync";
 

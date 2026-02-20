@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // TODO: Implement WhatsApp webhook
 export async function GET() {
   return new Response(JSON.stringify({ error: "Not implemented" }), {
