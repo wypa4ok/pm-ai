@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 export default function LandlordHomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">

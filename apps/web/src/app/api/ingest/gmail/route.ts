@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { ingestGmail } from "../../../../../../../src/server/integrations/gmail";
 
@@ -16,5 +18,3 @@ export async function POST() {
     );
   }
 }
-
-export const dynamic = "force-dynamic";

@@ -1,6 +1,8 @@
+export const dynamic = "force-dynamic";
+
 const cannedPhrases = [
-  "Thanks for reaching out. We’ve got your request and will update you shortly.",
-  "We’re coordinating a contractor; please share your preferred time windows.",
+  "Thanks for reaching out. We've got your request and will update you shortly.",
+  "We're coordinating a contractor; please share your preferred time windows.",
   "If this is urgent (leak/safety), call us right away at the emergency line.",
 ];
 
