@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import TicketTable from "../components/TicketTable";
 import { searchTickets } from "../../../../../../src/server/search/tickets";
 import { prisma } from "../../../../../../src/server/db";
