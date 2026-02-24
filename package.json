@@ -8,7 +8,8 @@
     "start": "cd apps/web && next start",
     "lint": "cd apps/web && next lint",
     "dev:worker": "cd apps/worker && npx ts-node src/index.ts",
-    "test:contract": "vitest run"
+    "test:contract": "vitest run",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.13.0",
