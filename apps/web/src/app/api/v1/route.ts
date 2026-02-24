@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const fetchCache = "force-no-store";
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";

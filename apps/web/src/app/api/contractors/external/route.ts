@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const fetchCache = "force-no-store";
 
 import { NextResponse } from "next/server";
 import { searchExternalContractors } from "../../../../../../../src/server/integrations/contractor-search";

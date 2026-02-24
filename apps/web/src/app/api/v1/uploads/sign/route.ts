@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const fetchCache = "force-no-store";
 
 import { NextRequest } from "next/server";
 import { handleSignUpload } from "../../../../../../../../src/server/api/uploads";
