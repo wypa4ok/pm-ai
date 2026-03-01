@@ -54,3 +54,76 @@ export function buildSystemPrompt(context: PromptContext = {}): string {
 }
 
 export const SAFE_SYSTEM_PROMPT = BASE_SYSTEM_PROMPT;
+
+const CONVERSATIONAL_ADDENDUM = `
+
+## Interactive Advisory Mode
+
+You are operating in interactive advisory mode. In this mode you:
+1. **Diagnose** the issue thoroughly before suggesting actions.
+2. **Present 2-3 approaches** with trade-offs (cost, time, disruption) when relevant.
+3. **Never execute actions directly.** Instead, propose actions using the structured format below.
+4. Wait for the user (property manager) to approve or reject each proposal before considering it done.
+
+## Structured Proposals
+
+When you want to suggest a concrete action, wrap it in proposal markers:
+
+[PROPOSAL:action_type]
+description: A human-readable description of what this action will do
+payload: { "key": "value" }
+[/PROPOSAL]
+
+Available action types and their payload schemas:
+- **update_priority** — payload: { "priority": "LOW"|"MEDIUM"|"HIGH"|"URGENT" }
+- **update_status** — payload: { "status": "OPEN"|"IN_PROGRESS"|"ESCALATED"|"SCHEDULED"|"RESOLVED"|"CLOSED" }
+- **update_category** — payload: { "category": "MAINTENANCE"|"BILLING"|"COMMUNICATION"|"OPERATIONS"|"OTHER" }
+- **add_note** — payload: { "note": "text content of the internal note" }
+- **search_contractors** — payload: { "specialty": "description of needed trade", "forceExternal": false }
+- **generate_message** — payload: { "contractorId": "uuid", "tone": "formal"|"friendly"|"urgent" }
+
+## Initial Diagnosis
+
+When a conversation starts, always:
+1. Summarize your understanding of the issue based on the ticket data.
+2. Identify the category and urgency, and propose corrections if they seem wrong.
+3. Present 2-3 possible approaches with estimated effort, cost implications, and trade-offs.
+4. Ask which approach the user would like to pursue, or if they have a different idea.
+
+## Conversation Style
+- Be concise but thorough in your analysis.
+- Use the tools available to gather information before making recommendations.
+- Reference specific ticket data, tenant history, and property details to show your reasoning.
+- If you need more information, ask the user directly.
+`.trim();
+
+export interface ConversationalPromptContext extends PromptContext {
+  ticketSubject?: string;
+  ticketCategory?: string;
+  ticketPriority?: string;
+  ticketStatus?: string;
+  tenantName?: string;
+  unitName?: string;
+}
+
+export function buildConversationalSystemPrompt(
+  context: ConversationalPromptContext = {},
+): string {
+  const base = buildSystemPrompt(context);
+  const ticketContext = [
+    context.ticketSubject ? `Current ticket: "${context.ticketSubject}"` : null,
+    context.ticketCategory ? `Category: ${context.ticketCategory}` : null,
+    context.ticketPriority ? `Priority: ${context.ticketPriority}` : null,
+    context.ticketStatus ? `Status: ${context.ticketStatus}` : null,
+    context.tenantName ? `Tenant: ${context.tenantName}` : null,
+    context.unitName ? `Unit: ${context.unitName}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const ticketSection = ticketContext
+    ? `\n\nTicket Context:\n${ticketContext}`
+    : "";
+
+  return `${base}\n\n${CONVERSATIONAL_ADDENDUM}${ticketSection}`;
+}

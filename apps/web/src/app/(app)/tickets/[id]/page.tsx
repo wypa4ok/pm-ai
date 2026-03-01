@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Timeline from "../../components/Timeline";
 import Composer from "../../components/Composer";
 import ContractorPanel from "../../components/ContractorPanel";
+import AgentPanel from "../../components/AgentPanel";
 import { detectUrgency } from "../../../../../../../src/server/ai/urgency";
 
 type TicketMessage = {
@@ -45,9 +46,12 @@ interface TicketDetailPageProps {
   params: { id: string };
 }
 
+type TabId = "timeline" | "agent";
+
 export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>("timeline");
 
   useEffect(() => {
     let mounted = true;
@@ -147,19 +151,52 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">Timeline</h2>
-          <div className="mt-3">
-            <Timeline items={timelineItems} />
-          </div>
+        {/* Tab bar */}
+        <div className="flex border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab("timeline")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "timeline"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Timeline
+          </button>
+          <button
+            onClick={() => setActiveTab("agent")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "agent"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Agent
+          </button>
         </div>
 
-        <Composer ticketId={ticket.id} draft={ticket.latestMessageSnippet} />
+        {activeTab === "timeline" ? (
+          <>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-slate-900">Timeline</h2>
+              <div className="mt-3">
+                <Timeline items={timelineItems} />
+              </div>
+            </div>
+            <Composer ticketId={ticket.id} draft={ticket.latestMessageSnippet} />
+          </>
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm min-h-[500px] flex flex-col">
+            <AgentPanel ticketId={ticket.id} />
+          </div>
+        )}
       </div>
 
-      <div className="w-full max-w-md space-y-4">
-        <ContractorPanel ticketId={ticket.id} />
-      </div>
+      {activeTab === "timeline" ? (
+        <div className="w-full max-w-md space-y-4">
+          <ContractorPanel ticketId={ticket.id} />
+        </div>
+      ) : null}
     </div>
   );
 }

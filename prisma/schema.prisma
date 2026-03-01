@@ -80,6 +80,24 @@ enum AgentEventType {
   MESSAGE_GENERATED
 }
 
+enum AgentConversationStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum AgentMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL_RESULT
+}
+
+enum ActionProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id                  String       @id @default(uuid()) @db.Uuid
   email               String       @unique
@@ -102,6 +120,8 @@ model User {
   ownedUnits          Unit[]       @relation("UnitOwner")
   ownedTenants        Tenant[]     @relation("OwnerTenants")
   agentEvents         AgentEvent[] @relation("AgentEventAuthor")
+  agentMessages       AgentConversationMessage[] @relation("AgentMessageAuthor")
+  resolvedProposals   ActionProposal[]           @relation("ProposalResolver")
 
   @@map("users")
 }
@@ -187,6 +207,7 @@ model Ticket {
   messages      Message[]
   agentEvents   AgentEvent[]
   contractorSearchResult ContractorSearchResult?
+  agentConversations     AgentConversation[]
 
   @@index([unitId])
   @@index([tenantId])
@@ -331,4 +352,57 @@ model TenancyMember {
   @@index([tenancyId])
   @@index([tenantId])
   @@map("tenancy_members")
+}
+
+model AgentConversation {
+  id        String                    @id @default(uuid()) @db.Uuid
+  ticketId  String                    @map("ticket_id") @db.Uuid
+  status    AgentConversationStatus   @default(ACTIVE)
+  summary   String?
+  createdAt DateTime                  @default(now()) @map("created_at")
+  updatedAt DateTime                  @updatedAt @map("updated_at")
+
+  ticket   Ticket                      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  messages AgentConversationMessage[]
+  proposals ActionProposal[]
+
+  @@index([ticketId, status])
+  @@index([createdAt])
+  @@map("agent_conversations")
+}
+
+model AgentConversationMessage {
+  id             String           @id @default(uuid()) @db.Uuid
+  conversationId String           @map("conversation_id") @db.Uuid
+  role           AgentMessageRole
+  content        String
+  metadata       Json?
+  authorUserId   String?          @map("author_user_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User?             @relation("AgentMessageAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@map("agent_conversation_messages")
+}
+
+model ActionProposal {
+  id              String               @id @default(uuid()) @db.Uuid
+  conversationId  String               @map("conversation_id") @db.Uuid
+  actionType      String               @map("action_type")
+  description     String
+  payload         Json
+  status          ActionProposalStatus @default(PENDING)
+  resolvedByUserId String?             @map("resolved_by_user_id") @db.Uuid
+  resolvedAt      DateTime?            @map("resolved_at")
+  executionResult Json?                @map("execution_result")
+  createdAt       DateTime             @default(now()) @map("created_at")
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  resolvedBy   User?             @relation("ProposalResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, status])
+  @@index([createdAt])
+  @@map("action_proposals")
 }
