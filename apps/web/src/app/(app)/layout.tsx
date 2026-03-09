@@ -93,41 +93,41 @@ export default async function AppLayout({
   const session = await requireOwnerSession();
 
   return (
-    <section className="flex min-h-screen flex-col bg-white text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
+    <section className="flex min-h-screen flex-col bg-surface-deep text-text-primary">
+      <header className="flex items-center justify-between border-b border-border bg-[#121214] px-6 py-4 text-text-primary">
         <div className="flex items-center gap-8">
           <Link href="/home" className="transition hover:opacity-80">
-            <p className="text-xs uppercase tracking-wide text-slate-300">Landlord Portal</p>
-            <h1 className="text-xl font-semibold">Property Management</h1>
+            <p className="text-xs uppercase tracking-wide text-text-secondary">Landlord Portal</p>
+            <h1 className="text-xl font-semibold text-text-primary">Property Management</h1>
           </Link>
           <nav className="flex gap-4">
             <Link
               href="/tickets"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-white/5 hover:text-accent"
             >
               Tickets
             </Link>
             <Link
               href="/tenancies"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-white/5 hover:text-accent"
             >
               Tenancies
             </Link>
             <Link
               href="/tenants"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-white/5 hover:text-accent"
             >
               Tenants
             </Link>
             <Link
               href="/contractors"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-white/5 hover:text-accent"
             >
               Contractors
             </Link>
             <Link
               href="/settings"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-white/5 hover:text-accent"
             >
               Settings
             </Link>
@@ -137,7 +137,7 @@ export default async function AppLayout({
           <div className="flex flex-col items-end gap-1 text-right text-sm">
             <div className="flex items-center gap-3">
               <RoleSwitcher roles={session.user.roles} activeRole={session.activeRole} />
-              <span className="rounded-full bg-blue-200/30 px-2 py-0.5 text-xs font-semibold text-blue-50">
+              <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
                 Landlord
               </span>
             </div>
@@ -146,14 +146,14 @@ export default async function AppLayout({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-md bg-red-500/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition"
+              className="rounded-md bg-red-500/20 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition"
             >
               Log Out
             </button>
           </form>
         </div>
       </header>
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div className="flex flex-1 flex-col bg-surface-deep">{children}</div>
     </section>
   );
 }
