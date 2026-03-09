@@ -169,7 +169,7 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-slate-500">
+      <div className="flex items-center justify-center py-12 text-text-secondary">
         Loading...
       </div>
     );
@@ -180,23 +180,23 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-text-primary">
             AI Agent Analysis
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-text-secondary">
             Start an interactive analysis to diagnose this issue and explore
             resolution options.
           </p>
         </div>
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
+          <div className="rounded-md bg-red-500/10 border border-red-500/30 px-4 py-2 text-sm text-red-400">
             {error}
           </div>
         )}
         <button
           onClick={handleStartAnalysis}
           disabled={sending}
-          className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50"
         >
           {sending ? "Starting analysis..." : "Start Analysis"}
         </button>
@@ -224,7 +224,7 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
     <div className="flex flex-col h-full">
       {/* Error banner */}
       {error && (
-        <div className="mx-4 mt-3 rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
+        <div className="mx-4 mt-3 rounded-md bg-red-500/10 border border-red-500/30 px-4 py-2 text-sm text-red-400">
           {error}
         </div>
       )}
@@ -235,20 +235,20 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
           <div key={msg.id}>
             {msg.role === "SYSTEM" ? (
               <div className="text-center">
-                <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">
+                <span className="inline-block rounded-full bg-surface-raised px-3 py-1 text-xs text-text-muted">
                   {msg.content}
                 </span>
               </div>
             ) : msg.role === "USER" ? (
               <div className="flex justify-end">
-                <div className="max-w-[80%] rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">
+                <div className="max-w-[80%] rounded-lg bg-accent/20 px-4 py-2 text-sm text-text-primary">
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 </div>
               </div>
             ) : (
               <div className="flex justify-start">
                 <div className="max-w-[80%]">
-                  <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 shadow-sm">
+                  <div className="rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-primary shadow-sm">
                     <p className="whitespace-pre-wrap">{stripProposalMarkers(msg.content)}</p>
                   </div>
                   {getProposalsForMessage(msg).map((proposal) => (
@@ -267,9 +267,9 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
 
         {sending && (
           <div className="flex justify-start">
-            <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 shadow-sm">
+            <div className="rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-secondary shadow-sm">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" />
                 Maple is thinking...
               </span>
             </div>
@@ -280,7 +280,7 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-slate-200 p-3">
+      <div className="border-t border-border p-3">
         <div className="flex gap-2">
           <textarea
             value={input}
@@ -289,12 +289,12 @@ export default function AgentPanel({ ticketId }: AgentPanelProps) {
             placeholder="Ask Maple about this ticket..."
             disabled={sending || conversation.status !== "ACTIVE"}
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50"
+            className="flex-1 resize-none rounded-lg border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30 disabled:bg-surface-raised"
           />
           <button
             onClick={handleSendMessage}
             disabled={sending || !input.trim() || conversation.status !== "ACTIVE"}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50"
           >
             Send
           </button>

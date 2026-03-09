@@ -116,7 +116,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-slate-500">
+      <div className="flex flex-1 items-center justify-center text-text-secondary">
         Loading ticket...
       </div>
     );
@@ -124,7 +124,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
 
   if (!ticket) {
     return (
-      <div className="flex flex-1 items-center justify-center text-slate-500">
+      <div className="flex flex-1 items-center justify-center text-text-secondary">
         Ticket not found.
       </div>
     );
@@ -133,32 +133,32 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 lg:flex-row">
       {urgency.isUrgent ? (
-        <div className="w-full rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+        <div className="w-full rounded-md bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
           ⚠ Urgent cues detected: {urgency.matched.join(", ")} — auto-send should be suppressed.
         </div>
       ) : null}
       <div className="flex flex-1 flex-col gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-slate-500">
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+          <p className="text-xs font-medium uppercase text-text-secondary">
             Ticket
           </p>
-          <h1 className="text-xl font-semibold text-slate-900">
+          <h1 className="text-xl font-semibold text-text-primary">
             {ticket.subject}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-text-secondary">
             {ticket.tenantName ?? "Unknown tenant"} • {ticket.channel} •{" "}
             {ticket.priority}
           </p>
         </div>
 
         {/* Tab bar */}
-        <div className="flex border-b border-slate-200">
+        <div className="flex border-b border-border">
           <button
             onClick={() => setActiveTab("timeline")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "timeline"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-secondary hover:text-text-primary"
             }`}
           >
             Timeline
@@ -167,8 +167,8 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
             onClick={() => setActiveTab("agent")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "agent"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
+                ? "border-accent text-accent"
+                : "border-transparent text-text-secondary hover:text-text-primary"
             }`}
           >
             Agent
@@ -177,8 +177,8 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
 
         {activeTab === "timeline" ? (
           <>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="text-sm font-semibold text-slate-900">Timeline</h2>
+            <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-text-primary">Timeline</h2>
               <div className="mt-3">
                 <Timeline items={timelineItems} />
               </div>
@@ -186,7 +186,7 @@ export default function TicketDetailPage({ params }: TicketDetailPageProps) {
             <Composer ticketId={ticket.id} draft={ticket.latestMessageSnippet} />
           </>
         ) : (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm min-h-[500px] flex flex-col">
+          <div className="rounded-xl border border-border bg-surface shadow-sm min-h-[500px] flex flex-col">
             <AgentPanel ticketId={ticket.id} />
           </div>
         )}

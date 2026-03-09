@@ -29,12 +29,12 @@ const ACTION_TYPE_LABELS: Record<string, string> = {
 };
 
 const ACTION_TYPE_COLORS: Record<string, string> = {
-  update_priority: "bg-orange-100 text-orange-800",
-  update_status: "bg-blue-100 text-blue-800",
-  update_category: "bg-purple-100 text-purple-800",
-  add_note: "bg-gray-100 text-gray-800",
-  search_contractors: "bg-green-100 text-green-800",
-  generate_message: "bg-teal-100 text-teal-800",
+  update_priority: "bg-orange-500/20 text-orange-400",
+  update_status: "bg-blue-500/20 text-blue-400",
+  update_category: "bg-purple-500/20 text-purple-400",
+  add_note: "bg-surface-raised text-text-secondary",
+  search_contractors: "bg-emerald-500/20 text-emerald-400",
+  generate_message: "bg-teal-500/20 text-teal-400",
 };
 
 export default function ActionProposalCard({
@@ -68,7 +68,7 @@ export default function ActionProposalCard({
   };
 
   const badgeColor =
-    ACTION_TYPE_COLORS[proposal.actionType] ?? "bg-gray-100 text-gray-800";
+    ACTION_TYPE_COLORS[proposal.actionType] ?? "bg-surface-raised text-text-secondary";
   const badgeLabel =
     ACTION_TYPE_LABELS[proposal.actionType] ?? proposal.actionType;
 
@@ -80,10 +80,10 @@ export default function ActionProposalCard({
     <div
       className={`my-2 rounded-lg border p-3 ${
         isPending
-          ? "border-amber-300 bg-amber-50"
+          ? "border-amber-500/30 bg-amber-500/10"
           : isAccepted
-            ? "border-green-200 bg-green-50"
-            : "border-red-200 bg-red-50"
+            ? "border-emerald-500/30 bg-emerald-500/10"
+            : "border-red-500/30 bg-red-500/10"
       }`}
     >
       <div className="flex items-center gap-2 mb-1">
@@ -94,13 +94,13 @@ export default function ActionProposalCard({
         </span>
         {!isPending && (
           <span
-            className={`text-xs font-medium ${isAccepted ? "text-green-700" : "text-red-700"}`}
+            className={`text-xs font-medium ${isAccepted ? "text-emerald-400" : "text-red-400"}`}
           >
             {isAccepted ? "Accepted" : "Rejected"}
           </span>
         )}
       </div>
-      <p className="text-sm text-slate-700">{proposal.description}</p>
+      <p className="text-sm text-text-secondary">{proposal.description}</p>
 
       {isPending && (
         <div className="mt-2 flex gap-2">
@@ -122,7 +122,7 @@ export default function ActionProposalCard({
       )}
 
       {isAccepted && proposal.executionResult && (
-        <p className="mt-1 text-xs text-green-600">
+        <p className="mt-1 text-xs text-emerald-400">
           {(proposal.executionResult as Record<string, unknown>).success
             ? "Action executed successfully"
             : `Error: ${(proposal.executionResult as Record<string, unknown>).error}`}

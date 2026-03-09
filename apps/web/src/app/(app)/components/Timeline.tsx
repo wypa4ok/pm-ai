@@ -20,35 +20,35 @@ interface TimelineProps {
 export default function Timeline({ items }: TimelineProps) {
   if (!items.length) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
+      <div className="rounded-lg border border-border bg-surface p-4 text-sm text-text-secondary">
         No activity yet.
       </div>
     );
   }
 
   return (
-    <ol className="relative space-y-6 border-l border-slate-200 pl-6">
+    <ol className="relative space-y-6 border-l border-border pl-6">
       {items.map((item) => (
         <li key={item.id} className="relative">
-          <span className="absolute -left-[11px] top-1.5 h-3 w-3 rounded-full bg-blue-500" />
+          <span className="absolute -left-[11px] top-1.5 h-3 w-3 rounded-full bg-accent" />
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-text-primary">
                 {item.title}
               </p>
               {item.badge ? (
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                <span className="rounded-full bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-secondary">
                   {item.badge}
                 </span>
               ) : null}
             </div>
             {item.timestamp ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-text-secondary">
                 {new Date(item.timestamp).toLocaleString()}
               </p>
             ) : null}
             {item.description ? (
-              <p className="text-sm text-slate-600">{item.description}</p>
+              <p className="text-sm text-text-secondary">{item.description}</p>
             ) : null}
             {item.attachments?.length ? (
               <div className="mt-2 flex flex-wrap gap-3">
@@ -84,14 +84,14 @@ function AttachmentBadge({
         href={attachment.url}
         target="_blank"
         rel="noreferrer"
-        className="flex w-32 flex-col overflow-hidden rounded-md border border-slate-200 bg-slate-50 shadow-sm transition hover:shadow"
+        className="flex w-32 flex-col overflow-hidden rounded-md border border-border bg-surface-alt shadow-sm transition hover:shadow"
       >
         <img
           src={attachment.url}
           alt={attachment.filename}
           className="h-24 w-full object-cover"
         />
-        <span className="truncate px-2 py-1 text-xs font-medium text-slate-700">
+        <span className="truncate px-2 py-1 text-xs font-medium text-text-secondary">
           {attachment.filename}
         </span>
       </a>
@@ -103,12 +103,12 @@ function AttachmentBadge({
       href={attachment.url ?? "#"}
       target={attachment.url ? "_blank" : undefined}
       rel={attachment.url ? "noreferrer" : undefined}
-      className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
+      className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-text-secondary shadow-sm"
     >
-      <span>{isPdf ? "📄" : "📎"}</span>
+      <span>{isPdf ? "\ud83d\udcc4" : "\ud83d\udcce"}</span>
       <span className="truncate max-w-[160px]">{attachment.filename}</span>
       {attachment.sizeInBytes ? (
-        <span className="text-[11px] text-slate-500">({formatSize(attachment.sizeInBytes)})</span>
+        <span className="text-[11px] text-text-secondary">({formatSize(attachment.sizeInBytes)})</span>
       ) : null}
     </a>
   );

@@ -22,7 +22,7 @@ export default function TenancyTable({ tenancies }: TenancyTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
         <thead>
-          <tr className="text-xs uppercase text-slate-500">
+          <tr className="text-xs uppercase text-text-secondary">
             <th className="py-3 pr-3 font-medium">Unit</th>
             <th className="py-3 pr-3 font-medium">Primary Tenant</th>
             <th className="py-3 pr-3 font-medium">Members</th>
@@ -32,34 +32,34 @@ export default function TenancyTable({ tenancies }: TenancyTableProps) {
             <th className="py-3 pr-3 font-medium">Tickets</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-border">
           {tenancies.map((tenancy) => (
-            <tr key={tenancy.id} className="hover:bg-slate-50">
+            <tr key={tenancy.id} className="hover:bg-surface-raised">
               <td className="py-3 pr-3 align-top">
                 <Link href={`/tenancies/${tenancy.id}`}>
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-semibold text-slate-900 hover:underline">
+                    <div className="text-sm font-semibold text-text-primary hover:underline">
                       {tenancy.unitName}
                     </div>
-                    <p className="text-xs text-slate-500">{tenancy.unitAddress}</p>
+                    <p className="text-xs text-text-secondary">{tenancy.unitAddress}</p>
                   </div>
                 </Link>
               </td>
               <td className="py-3 pr-3">
-                <span className="text-sm text-slate-900">{tenancy.primaryTenant}</span>
+                <span className="text-sm text-text-primary">{tenancy.primaryTenant}</span>
               </td>
               <td className="py-3 pr-3">
-                <span className="text-sm text-slate-900">
+                <span className="text-sm text-text-primary">
                   {tenancy.memberCount} {tenancy.memberCount === 1 ? "tenant" : "tenants"}
                 </span>
               </td>
               <td className="py-3 pr-3">
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-text-secondary">
                   {new Date(tenancy.startDate).toLocaleDateString()}
                 </span>
               </td>
               <td className="py-3 pr-3">
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-text-secondary">
                   {tenancy.endDate
                     ? new Date(tenancy.endDate).toLocaleDateString()
                     : "Ongoing"}
@@ -69,15 +69,15 @@ export default function TenancyTable({ tenancies }: TenancyTableProps) {
                 <span
                   className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                     tenancy.isActive
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-100 text-slate-600"
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "bg-surface-raised text-text-secondary"
                   }`}
                 >
                   {tenancy.isActive ? "Active" : "Ended"}
                 </span>
               </td>
               <td className="py-3 pr-3">
-                <span className="text-sm text-slate-600">{tenancy.ticketCount}</span>
+                <span className="text-sm text-text-secondary">{tenancy.ticketCount}</span>
               </td>
             </tr>
           ))}

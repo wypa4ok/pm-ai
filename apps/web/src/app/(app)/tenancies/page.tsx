@@ -94,26 +94,26 @@ export default async function TenanciesPage({
     <div className="flex flex-1 flex-col gap-6 p-8">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">Lease management</p>
-          <h1 className="text-2xl font-semibold text-slate-900">Tenancies</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm font-medium text-text-secondary">Lease management</p>
+          <h1 className="text-2xl font-semibold text-text-primary">Tenancies</h1>
+          <p className="text-sm text-text-secondary">
             View and manage active and past tenant leases
           </p>
         </div>
         <Link
           href="/tenancies/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover"
         >
           Create Tenancy
         </Link>
       </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <form className="grid gap-4 md:grid-cols-3" method="get">
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1 text-sm font-medium text-text-secondary">
             Unit
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className="rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               name="unitId"
               defaultValue={unitId ?? ""}
             >
@@ -126,10 +126,10 @@ export default async function TenanciesPage({
             </select>
           </label>
 
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1 text-sm font-medium text-text-secondary">
             Status
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className="rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               name="active"
               defaultValue={activeOnly ? "true" : ""}
             >
@@ -141,7 +141,7 @@ export default async function TenanciesPage({
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised"
             >
               Apply Filters
             </button>
@@ -149,9 +149,9 @@ export default async function TenanciesPage({
         </form>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         {serialized.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-text-secondary">
             No tenancies match the current filters.
           </p>
         ) : (
