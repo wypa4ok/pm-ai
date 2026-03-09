@@ -1,126 +1,193 @@
 export const dynamic = "force-dynamic";
 
-export default function LandlordHomePage() {
+import Link from "next/link";
+import {
+  getDashboardStats,
+  getAttentionItems,
+  type DashboardStats,
+  type AttentionItem,
+} from "~/server/services/dashboard-service";
+
+export default async function LandlordHomePage() {
+  const [stats, attentionItems] = await Promise.all([
+    getDashboardStats(),
+    getAttentionItems(),
+  ]);
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-semibold text-white">Welcome to your Landlord Portal</h1>
-        <p className="mt-2 text-base text-slate-200/80">
-          Use the navigation menu above to manage your properties and tenants.
+    <div className="flex flex-1 flex-col gap-8 p-8">
+      {/* Welcome */}
+      <div>
+        <h1 className="text-2xl font-semibold text-text-primary">Dashboard</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          Here&apos;s what&apos;s happening across your properties.
         </p>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:max-w-6xl">
-        <a
+      {/* Stat Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Open Tickets"
+          value={stats.openTickets}
+          alert={stats.urgentTickets > 0}
+          alertLabel={`${stats.urgentTickets} urgent`}
+          href="/tickets?status=OPEN"
+        />
+        <StatCard
+          label="Overdue"
+          value={stats.overdueTickets}
+          alert={stats.overdueTickets > 0}
+          variant="danger"
           href="/tickets"
-          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-blue-400 hover:bg-white/20"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white group-hover:text-blue-300">
-              Tickets
-            </h2>
-            <svg
-              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-slate-300">
-            View and manage maintenance requests from your tenants.
-          </p>
-        </a>
-
-        <a
-          href="/tenancies"
-          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-indigo-400 hover:bg-white/20"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white group-hover:text-indigo-300">
-              Tenancies
-            </h2>
-            <svg
-              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-slate-300">
-            Manage tenant leases, members, and rental periods.
-          </p>
-        </a>
-
-        <a
-          href="/tenants"
-          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-emerald-400 hover:bg-white/20"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white group-hover:text-emerald-300">
-              Tenants
-            </h2>
-            <svg
-              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-slate-300">
-            Manage tenant information and send invitations.
-          </p>
-        </a>
-
-        <a
-          href="/contractors"
-          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-purple-400 hover:bg-white/20"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white group-hover:text-purple-300">
-              Contractors
-            </h2>
-            <svg
-              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-purple-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-slate-300">
-            View and manage your contractor network.
-          </p>
-        </a>
-
-        <a
-          href="/settings"
-          className="group flex flex-col gap-3 rounded-xl border border-slate-700 bg-white/10 p-6 shadow-sm transition hover:border-slate-400 hover:bg-white/20"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white group-hover:text-slate-200">
-              Settings
-            </h2>
-            <svg
-              className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-slate-200"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-slate-300">
-            Configure your account and preferences.
-          </p>
-        </a>
+        />
+        <StatCard
+          label="Awaiting Action"
+          value={stats.pendingApprovals}
+          href="/tickets"
+        />
+        <StatCard
+          label="Resolved This Month"
+          value={stats.resolvedThisMonth}
+          variant="success"
+          href="/tickets?status=RESOLVED"
+        />
       </div>
+
+      {/* Needs Attention */}
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-text-primary">Needs Attention</h2>
+          <Link href="/tickets" className="text-sm text-accent hover:text-accent-hover transition">
+            View all tickets
+          </Link>
+        </div>
+        <div className="rounded-xl border border-border bg-surface shadow-sm">
+          {attentionItems.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-text-secondary">
+              All clear — no items need your attention right now.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {attentionItems.map((item) => (
+                <AttentionRow key={item.id} item={item} />
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Quick Navigation */}
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-text-primary">Quick Access</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            { href: "/tickets", label: "Tickets", desc: "Manage requests" },
+            { href: "/tenancies", label: "Tenancies", desc: "Lease management" },
+            { href: "/tenants", label: "Tenants", desc: "Tenant directory" },
+            { href: "/contractors", label: "Contractors", desc: "Vendor network" },
+            { href: "/settings", label: "Settings", desc: "Preferences" },
+          ].map((nav) => (
+            <Link
+              key={nav.href}
+              href={nav.href}
+              className="group flex flex-col gap-1 rounded-lg border border-border bg-surface p-4 transition hover:border-accent/50 hover:bg-surface-raised"
+            >
+              <span className="text-sm font-medium text-text-primary group-hover:text-accent transition">
+                {nav.label}
+              </span>
+              <span className="text-xs text-text-secondary">{nav.desc}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  alert,
+  alertLabel,
+  variant,
+  href,
+}: {
+  label: string;
+  value: number;
+  alert?: boolean;
+  alertLabel?: string;
+  variant?: "danger" | "success";
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col gap-2 rounded-xl border border-border bg-surface p-5 transition hover:border-accent/50 hover:bg-surface-raised"
+    >
+      <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+        {label}
+      </span>
+      <div className="flex items-end gap-2">
+        <span
+          className={`text-3xl font-bold ${
+            variant === "danger" && value > 0
+              ? "text-red-400"
+              : variant === "success"
+                ? "text-emerald-400"
+                : "text-text-primary"
+          }`}
+        >
+          {value}
+        </span>
+        {alert && alertLabel ? (
+          <span className="mb-1 rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-400">
+            {alertLabel}
+          </span>
+        ) : null}
+      </div>
+    </Link>
+  );
+}
+
+function AttentionRow({ item }: { item: AttentionItem }) {
+  const priorityColor =
+    item.priority === "URGENT" || item.priority === "HIGH"
+      ? "bg-red-500"
+      : item.priority === "MEDIUM"
+        ? "bg-amber-500"
+        : "bg-text-muted";
+
+  const typeLabel =
+    item.type === "urgent_ticket"
+      ? "Urgent"
+      : item.type === "overdue_ticket"
+        ? "Overdue"
+        : "Pending";
+
+  const typeBadgeColor =
+    item.type === "urgent_ticket"
+      ? "bg-red-500/20 text-red-400"
+      : item.type === "overdue_ticket"
+        ? "bg-amber-500/20 text-amber-400"
+        : "bg-accent/20 text-accent";
+
+  return (
+    <li>
+      <Link
+        href={`/tickets/${item.ticketId}`}
+        className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-surface-raised"
+      >
+        <div className={`h-8 w-1 shrink-0 rounded-full ${priorityColor}`} />
+        <div className="flex-1 min-w-0">
+          <p className="truncate text-sm font-medium text-text-primary">{item.subject}</p>
+          <p className="text-xs text-text-secondary">
+            {item.tenantName ?? "Unknown tenant"} &middot; {item.timeAgo}
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${typeBadgeColor}`}>
+          {typeLabel}
+        </span>
+      </Link>
+    </li>
   );
 }
