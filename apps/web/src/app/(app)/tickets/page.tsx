@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import TicketTable from "../components/TicketTable";
+import TicketsView from "../components/TicketsView";
 import { searchTickets } from "../../../../../../src/server/search/tickets";
 import { prisma } from "../../../../../../src/server/db";
 
@@ -40,15 +40,9 @@ export default async function TicketsPage({
   const search = typeof searchParams?.search === "string" ? searchParams.search : "";
   const tenantId = typeof searchParams?.tenantId === "string" ? searchParams.tenantId : "";
 
-  // Fetch all tenants for the dropdown filter
   const tenants = await prisma.tenant.findMany({
     orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-    },
+    select: { id: true, firstName: true, lastName: true, email: true },
   });
 
   const tickets = await searchTickets({
@@ -62,101 +56,73 @@ export default async function TicketsPage({
 
   const serialized = serializeTickets(tickets);
 
+  const selectClasses =
+    "rounded-lg border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent focus:ring-1 focus:ring-accent/30";
+  const inputClasses =
+    "rounded-lg border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30";
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
-      <header className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-slate-500">Inbox</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Tickets</h1>
-        <p className="text-sm text-slate-500">
-          Filter tickets by status, category, channel, or keyword.
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-text-secondary">Inbox</p>
+          <h1 className="text-2xl font-semibold text-text-primary">Tickets</h1>
+        </div>
       </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <form className="grid gap-4 md:grid-cols-5" method="get">
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
             Status
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              name="status"
-              defaultValue={status}
-            >
+            <select className={selectClasses} name="status" defaultValue={status}>
               <option value="">All</option>
-              {statusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+              {statusOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt.replace("_", " ")}</option>
               ))}
             </select>
           </label>
-
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
             Category
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              name="category"
-              defaultValue={category}
-            >
+            <select className={selectClasses} name="category" defaultValue={category}>
               <option value="">All</option>
-              {categoryOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+              {categoryOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
           </label>
-
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
             Channel
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              name="channel"
-              defaultValue={channel}
-            >
+            <select className={selectClasses} name="channel" defaultValue={channel}>
               <option value="">All</option>
-              {channelOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+              {channelOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
           </label>
-
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
             Tenant
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
-              name="tenantId"
-              defaultValue={tenantId}
-            >
+            <select className={selectClasses} name="tenantId" defaultValue={tenantId}>
               <option value="">All tenants</option>
-              {tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.firstName} {tenant.lastName} ({tenant.email})
+              {tenants.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.firstName} {t.lastName}
                 </option>
               ))}
             </select>
           </label>
-
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
             Search
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className={inputClasses}
               name="search"
               defaultValue={search}
-              placeholder="Subject, keywords"
+              placeholder="Subject, keywords..."
             />
           </label>
         </form>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        {serialized.length === 0 ? (
-          <p className="text-sm text-slate-500">No tickets match the current filters.</p>
-        ) : (
-          <TicketTable tickets={serialized} />
-        )}
-      </section>
+      <TicketsView tickets={serialized} />
     </div>
   );
 }

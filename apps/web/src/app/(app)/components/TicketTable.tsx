@@ -23,52 +23,46 @@ export default function TicketTable({ tickets }: TicketTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
         <thead>
-          <tr className="text-xs uppercase text-slate-500">
-            <th className="py-3 pr-3 font-medium">Ticket</th>
-            <th className="py-3 pr-3 font-medium">Tenant</th>
-            <th className="py-3 pr-3 font-medium">Category</th>
-            <th className="py-3 pr-3 font-medium">Channel</th>
-            <th className="py-3 pr-3 font-medium">Priority</th>
-            <th className="py-3 pr-3 font-medium">Status</th>
-            <th className="py-3 pr-3 font-medium">Opened</th>
+          <tr className="text-xs uppercase text-text-muted">
+            <th className="px-4 py-3 font-medium">Ticket</th>
+            <th className="px-4 py-3 font-medium">Tenant</th>
+            <th className="px-4 py-3 font-medium">Category</th>
+            <th className="px-4 py-3 font-medium">Channel</th>
+            <th className="px-4 py-3 font-medium">Priority</th>
+            <th className="px-4 py-3 font-medium">Status</th>
+            <th className="px-4 py-3 font-medium">Opened</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-border">
           {tickets.map((ticket) => (
-            <tr key={ticket.id} className="hover:bg-slate-50">
-              <td className="py-3 pr-3 align-top">
+            <tr key={ticket.id} className="transition hover:bg-surface-raised">
+              <td className="px-4 py-3 align-top">
                 <Link href={`/tickets/${ticket.id}`}>
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-semibold text-slate-900 hover:underline">
+                    <div className="text-sm font-medium text-text-primary hover:text-accent transition">
                       {ticket.subject}
                     </div>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-text-muted">
                       {ticket.latestMessageSnippet ?? "Awaiting first message"}
                     </p>
                   </div>
                 </Link>
               </td>
-              <td className="py-3 pr-3 align-top">
-                <div className="text-sm text-slate-900">
-                  {ticket.tenantName ?? "—"}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {ticket.unitName ?? ""}
-                </div>
+              <td className="px-4 py-3 align-top">
+                <div className="text-sm text-text-primary">{ticket.tenantName ?? "\u2014"}</div>
+                <div className="text-xs text-text-muted">{ticket.unitName ?? ""}</div>
               </td>
-              <td className="py-3 pr-3 align-top">{ticket.category}</td>
-              <td className="py-3 pr-3 align-top">{ticket.channel}</td>
-              <td className="py-3 pr-3 align-top">
-                <span
-                  className={`rounded-full px-2 py-1 text-xs font-medium ${badgeColor(
-                    ticket.priority,
-                  )}`}
-                >
+              <td className="px-4 py-3 align-top text-sm text-text-secondary">{ticket.category}</td>
+              <td className="px-4 py-3 align-top text-sm text-text-secondary">{ticket.channel}</td>
+              <td className="px-4 py-3 align-top">
+                <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${badgeColor(ticket.priority)}`}>
                   {ticket.priority}
                 </span>
               </td>
-              <td className="py-3 pr-3 align-top">{ticket.status}</td>
-              <td className="py-3 pr-3 align-top text-xs text-slate-500">
+              <td className="px-4 py-3 align-top">
+                <span className="text-sm text-text-secondary">{ticket.status.replace("_", " ")}</span>
+              </td>
+              <td className="px-4 py-3 align-top text-xs text-text-muted">
                 {new Date(ticket.openedAt).toLocaleString()}
               </td>
             </tr>
@@ -83,10 +77,10 @@ function badgeColor(priority: string) {
   switch (priority) {
     case "URGENT":
     case "HIGH":
-      return "bg-red-100 text-red-700";
+      return "bg-red-500/20 text-red-400 border-red-500/30";
     case "MEDIUM":
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-secondary border-border";
   }
 }
