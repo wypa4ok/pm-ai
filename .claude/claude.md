@@ -3,6 +3,7 @@
 - Always consider the database design when making chages. Make sure to sattisfy the foreign key dependencies
 - Never perform database migrations that will result in lost data
 - Make sure to nto access database from presentation layer (e.g. page components) directly, ALWAYS go through Service Layer
+- After making code changes, always list any required follow-up actions the user must take (e.g. running CLI commands, updating environment variables, restarting services, running migrations)
 
 
 # Architecture
