@@ -9,6 +9,7 @@ import {
   deriveRoles,
   fetchSupabaseUser,
 } from "../../../server/session/role";
+import { getOrCreateUser } from "../../../../../../src/server/services/user-sync";
 
 export default async function TenantsPage() {
   const [tenants, units] = await Promise.all([
@@ -147,19 +148,26 @@ async function inviteTenantAction(formData: FormData) {
     redirect("/login");
   }
 
-  const user = await fetchSupabaseUser(accessToken!);
-  if (!user) {
+  const supabaseUser = await fetchSupabaseUser(accessToken!);
+  if (!supabaseUser) {
     redirect("/login?error=Session%20expired.%20Please%20sign%20in%20again.");
   }
 
-  const roles = deriveRoles(user);
+  const roles = deriveRoles(supabaseUser);
   if (!roles.includes("OWNER")) {
     throw new Error("Only owners can invite tenants");
   }
 
+  // Ensure the user exists in the app DB before creating the tenant (FK requirement)
+  const user = await getOrCreateUser({
+    supabaseUserId: supabaseUser.id,
+    email: supabaseUser.email ?? "",
+    fullName: supabaseUser.user_metadata?.full_name as string | undefined,
+  });
+
   await createTenantInvite({
     ownerUserId: user.id,
-    ownerEmail: user.email ?? undefined,
+    ownerEmail: user.email,
     firstName: String(formData.get("firstName") ?? ""),
     lastName: String(formData.get("lastName") ?? ""),
     email: String(formData.get("email") ?? ""),
