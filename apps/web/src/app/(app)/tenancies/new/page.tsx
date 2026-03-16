@@ -184,7 +184,7 @@ export default function NewTenancyPage() {
   if (loadingData) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
-        <p className="text-sm text-slate-500">Loading...</p>
+        <p className="text-sm text-text-muted">Loading...</p>
       </div>
     );
   }
@@ -194,47 +194,47 @@ export default function NewTenancyPage() {
       <div>
         <Link
           href="/tenancies"
-          className="text-sm text-slate-500 hover:text-slate-700"
+          className="text-sm text-text-muted hover:text-text-secondary"
         >
           ← Back to tenancies
         </Link>
-        <h1 className="mt-4 text-2xl font-semibold text-slate-900">
+        <h1 className="mt-4 text-2xl font-semibold text-text-primary">
           Create New Tenancy
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-text-secondary">
           Add a new tenancy to track tenant leases and rental periods
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+          <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
             {error}
           </div>
         )}
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-text-primary">
               Property/Unit Selection
             </h2>
             <button
               type="button"
               onClick={() => setShowNewUnitForm(!showNewUnitForm)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-raised"
             >
               {showNewUnitForm ? "Cancel" : "Create New Unit"}
             </button>
           </div>
 
           {showNewUnitForm ? (
-            <div className="mt-4 space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h3 className="text-sm font-semibold text-slate-900">
+            <div className="mt-4 space-y-4 rounded-lg border border-accent/20 bg-accent/5 p-4">
+              <h3 className="text-sm font-semibold text-text-primary">
                 New Unit Details
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Unit Name *
                   </label>
                   <input
@@ -244,13 +244,13 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewUnitData({ ...newUnitData, name: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="e.g., Apartment 3B, 123 Main St House"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Address Line 1 *
                   </label>
                   <input
@@ -263,13 +263,13 @@ export default function NewTenancyPage() {
                         address1: e.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="Street address"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Address Line 2
                   </label>
                   <input
@@ -281,13 +281,13 @@ export default function NewTenancyPage() {
                         address2: e.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="Apt, suite, unit, etc."
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     City *
                   </label>
                   <input
@@ -297,12 +297,12 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewUnitData({ ...newUnitData, city: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     State *
                   </label>
                   <input
@@ -312,13 +312,13 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewUnitData({ ...newUnitData, state: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="e.g., CA, NY"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Postal Code *
                   </label>
                   <input
@@ -331,7 +331,7 @@ export default function NewTenancyPage() {
                         postalCode: e.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                   />
                 </div>
               </div>
@@ -340,14 +340,14 @@ export default function NewTenancyPage() {
                 type="button"
                 onClick={handleCreateUnit}
                 disabled={isLoading}
-                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50"
               >
                 {isLoading ? "Creating Unit..." : "Create Unit"}
               </button>
             </div>
           ) : (
             <div className="mt-4">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-text-secondary">
                 Select Unit/Property *
               </label>
               <select
@@ -356,7 +356,7 @@ export default function NewTenancyPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, unitId: e.target.value })
                 }
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               >
                 <option value="">
                   {units.length === 0
@@ -370,7 +370,7 @@ export default function NewTenancyPage() {
                 ))}
               </select>
               {units.length === 0 && (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-text-muted">
                   Click &quot;Create New Unit&quot; to add your first property
                 </p>
               )}
@@ -378,14 +378,14 @@ export default function NewTenancyPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-text-primary">
             Tenancy Details
           </h2>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-text-secondary">
                 Start Date *
               </label>
               <input
@@ -395,12 +395,12 @@ export default function NewTenancyPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, startDate: e.target.value })
                 }
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-text-secondary">
                 End Date (optional)
               </label>
               <input
@@ -409,12 +409,12 @@ export default function NewTenancyPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, endDate: e.target.value })
                 }
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-text-secondary">
                 Notes (optional)
               </label>
               <textarea
@@ -423,30 +423,30 @@ export default function NewTenancyPage() {
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 rows={3}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                 placeholder="Any additional notes about this tenancy"
               />
             </div>
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-border bg-surface p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-text-primary">
               Tenant Members
             </h2>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowNewTenantForm(!showNewTenantForm)}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-raised"
               >
                 {showNewTenantForm ? "Cancel" : "Create New Tenant"}
               </button>
               <button
                 type="button"
                 onClick={addMember}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-raised"
               >
                 Add Member
               </button>
@@ -454,13 +454,13 @@ export default function NewTenancyPage() {
           </div>
 
           {showNewTenantForm && (
-            <div className="mt-4 space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
-              <h3 className="text-sm font-semibold text-slate-900">
+            <div className="mt-4 space-y-4 rounded-lg border border-accent/20 bg-accent/5 p-4">
+              <h3 className="text-sm font-semibold text-text-primary">
                 New Tenant Details
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     First Name *
                   </label>
                   <input
@@ -470,13 +470,13 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewTenantData({ ...newTenantData, firstName: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="John"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Last Name *
                   </label>
                   <input
@@ -486,13 +486,13 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewTenantData({ ...newTenantData, lastName: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="Doe"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Email *
                   </label>
                   <input
@@ -502,13 +502,13 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewTenantData({ ...newTenantData, email: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="john.doe@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-text-secondary">
                     Phone (optional)
                   </label>
                   <input
@@ -517,7 +517,7 @@ export default function NewTenancyPage() {
                     onChange={(e) =>
                       setNewTenantData({ ...newTenantData, phone: e.target.value })
                     }
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -527,7 +527,7 @@ export default function NewTenancyPage() {
                 type="button"
                 onClick={handleCreateTenant}
                 disabled={isLoading}
-                className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50"
               >
                 {isLoading ? "Creating Tenant..." : "Create Tenant"}
               </button>
@@ -538,11 +538,11 @@ export default function NewTenancyPage() {
             {formData.members.map((member, index) => (
               <div
                 key={index}
-                className="flex items-start gap-4 rounded-lg border border-slate-200 p-4"
+                className="flex items-start gap-4 rounded-lg border border-border bg-surface-alt p-4"
               >
                 <div className="flex-1 space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-text-secondary">
                       Tenant *
                     </label>
                     <select
@@ -551,7 +551,7 @@ export default function NewTenancyPage() {
                       onChange={(e) =>
                         updateMember(index, "tenantId", e.target.value)
                       }
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
                     >
                       <option value="">Select a tenant</option>
                       {tenants.map((tenant) => (
@@ -561,7 +561,7 @@ export default function NewTenancyPage() {
                       ))}
                     </select>
                     {tenants.length === 0 && !showNewTenantForm && (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-text-muted">
                         No tenants available. Click &quot;Create New Tenant&quot; to add one.
                       </p>
                     )}
@@ -575,11 +575,11 @@ export default function NewTenancyPage() {
                       onChange={(e) =>
                         updateMember(index, "isPrimary", e.target.checked)
                       }
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-border accent-accent focus:ring-accent/30"
                     />
                     <label
                       htmlFor={`primary-${index}`}
-                      className="text-sm text-slate-700"
+                      className="text-sm text-text-secondary"
                     >
                       Primary tenant
                     </label>
@@ -590,7 +590,7 @@ export default function NewTenancyPage() {
                   <button
                     type="button"
                     onClick={() => removeMember(index)}
-                    className="mt-6 text-red-600 hover:text-red-700"
+                    className="mt-6 text-red-400 hover:text-red-300"
                   >
                     <svg
                       className="h-5 w-5"
@@ -611,7 +611,7 @@ export default function NewTenancyPage() {
             ))}
           </div>
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-text-muted">
             At least one tenant member is required. You can add more tenants
             after creating the tenancy using the &quot;Add Tenant&quot; button.
           </p>
@@ -620,14 +620,14 @@ export default function NewTenancyPage() {
         <div className="flex justify-end gap-3">
           <Link
             href="/tenancies"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isLoading || showNewUnitForm || showNewTenantForm}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50"
           >
             {isLoading ? "Creating..." : "Create Tenancy"}
           </button>
