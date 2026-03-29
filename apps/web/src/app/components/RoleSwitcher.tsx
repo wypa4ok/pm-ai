@@ -22,8 +22,8 @@ export async function RoleSwitcher({ roles, activeRole }: RoleSwitcherProps) {
           value="OWNER"
           className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
             activeRole === "OWNER"
-              ? "border-blue-500 bg-blue-50 text-blue-700"
-              : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-border bg-surface-raised text-text-secondary hover:border-accent/30 hover:text-text-primary"
           }`}
           disabled={activeRole === "OWNER"}
         >
@@ -37,8 +37,8 @@ export async function RoleSwitcher({ roles, activeRole }: RoleSwitcherProps) {
           value="TENANT"
           className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
             activeRole === "TENANT"
-              ? "border-green-500 bg-green-50 text-green-700"
-              : "border-slate-200 bg-white text-slate-600 hover:border-green-300"
+              ? "border-green-500/40 bg-green-500/10 text-green-400"
+              : "border-border bg-surface-raised text-text-secondary hover:border-green-500/30 hover:text-text-primary"
           }`}
           disabled={activeRole === "TENANT"}
         >
