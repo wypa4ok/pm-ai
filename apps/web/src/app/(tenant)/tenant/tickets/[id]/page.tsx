@@ -96,7 +96,7 @@ export default function TenantTicketDetailPage({ params }: TenantTicketDetailPag
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-slate-500">
+      <div className="flex flex-1 items-center justify-center text-text-secondary">
         Loading ticket...
       </div>
     );
@@ -104,11 +104,11 @@ export default function TenantTicketDetailPage({ params }: TenantTicketDetailPag
 
   if (!ticket) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 text-slate-500">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 text-text-secondary">
         <p>Ticket not found or you don&apos;t have access to it.</p>
         <a
           href="/tenant/tickets"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover"
         >
           Back to Tickets
         </a>
@@ -119,51 +119,43 @@ export default function TenantTicketDetailPage({ params }: TenantTicketDetailPag
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div className="flex flex-col gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium uppercase text-text-muted">
                 Request #{ticket.id.slice(0, 8)}
               </p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+              <h1 className="mt-1 text-2xl font-semibold text-text-primary">
                 {ticket.subject}
               </h1>
-              <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+              <div className="mt-2 flex items-center gap-2 text-sm text-text-secondary">
                 {ticket.unitName && (
-                  <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium">
+                  <span className="rounded bg-surface-raised px-2 py-1 text-xs font-medium text-text-secondary">
                     {ticket.unitName}
                   </span>
                 )}
-                <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                <span className="rounded bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
                   {ticket.category}
                 </span>
-                <span
-                  className={`rounded px-2 py-1 text-xs font-medium ${statusBadgeColor(
-                    ticket.status,
-                  )}`}
-                >
+                <span className={`rounded px-2 py-1 text-xs font-medium ${statusBadgeColor(ticket.status)}`}>
                   {ticket.status}
                 </span>
-                <span
-                  className={`rounded px-2 py-1 text-xs font-medium ${priorityBadgeColor(
-                    ticket.priority,
-                  )}`}
-                >
+                <span className={`rounded px-2 py-1 text-xs font-medium ${priorityBadgeColor(ticket.priority)}`}>
                   {ticket.priority}
                 </span>
               </div>
             </div>
             <a
               href="/tenant/tickets"
-              className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
+              className="text-sm text-text-muted hover:text-text-primary hover:underline"
             >
               ← Back to Tickets
             </a>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Activity</h2>
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">Activity</h2>
           <Timeline items={timelineItems} />
         </div>
 
@@ -176,19 +168,19 @@ export default function TenantTicketDetailPage({ params }: TenantTicketDetailPag
 function statusBadgeColor(status: string) {
   switch (status) {
     case "OPEN":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-500/10 text-blue-400";
     case "IN_PROGRESS":
-      return "bg-purple-100 text-purple-700";
+      return "bg-purple-500/10 text-purple-400";
     case "SCHEDULED":
-      return "bg-cyan-100 text-cyan-700";
+      return "bg-cyan-500/10 text-cyan-400";
     case "RESOLVED":
-      return "bg-green-100 text-green-700";
+      return "bg-green-500/10 text-green-400";
     case "CLOSED":
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
     case "ESCALATED":
-      return "bg-red-100 text-red-700";
+      return "bg-red-500/10 text-red-400";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
   }
 }
 
@@ -196,10 +188,10 @@ function priorityBadgeColor(priority: string) {
   switch (priority) {
     case "URGENT":
     case "HIGH":
-      return "bg-red-100 text-red-700";
+      return "bg-red-500/10 text-red-400";
     case "MEDIUM":
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-500/10 text-amber-400";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
   }
 }

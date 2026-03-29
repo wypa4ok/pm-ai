@@ -63,7 +63,6 @@ function AcceptInviteContent() {
 
         if (!response.ok) {
           setStatus("error");
-          // Show more detailed error message
           if (response.status === 403 && data.message?.includes("This invite is for")) {
             setMessage(data.message);
           } else {
@@ -90,21 +89,21 @@ function AcceptInviteContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-surface-deep px-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface p-8 shadow-sm">
         {status === "processing" && (
           <div className="text-center">
-            <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-            <h2 className="mb-2 text-xl font-semibold text-slate-900">Processing Invite</h2>
-            <p className="text-sm text-slate-600">{message}</p>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-2 border-border border-t-accent" />
+            <h2 className="mb-2 text-xl font-semibold text-text-primary">Processing Invite</h2>
+            <p className="text-sm text-text-secondary">{message}</p>
           </div>
         )}
 
         {status === "success" && (
           <div className="text-center">
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 border border-accent/20">
               <svg
-                className="h-6 w-6 text-green-600"
+                className="h-5 w-5 text-accent"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -117,17 +116,17 @@ function AcceptInviteContent() {
                 />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-semibold text-slate-900">Success!</h2>
-            <p className="text-sm text-slate-600">{message}</p>
-            <p className="mt-4 text-xs text-slate-500">Redirecting to your portal...</p>
+            <h2 className="mb-2 text-xl font-semibold text-text-primary">Success!</h2>
+            <p className="text-sm text-text-secondary">{message}</p>
+            <p className="mt-4 text-xs text-text-muted">Redirecting to your portal...</p>
           </div>
         )}
 
         {status === "error" && (
           <div className="text-center">
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
               <svg
-                className="h-6 w-6 text-red-600"
+                className="h-5 w-5 text-red-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -140,11 +139,11 @@ function AcceptInviteContent() {
                 />
               </svg>
             </div>
-            <h2 className="mb-2 text-xl font-semibold text-slate-900">Error</h2>
-            <p className="text-sm text-slate-600">{message}</p>
+            <h2 className="mb-2 text-xl font-semibold text-text-primary">Error</h2>
+            <p className="text-sm text-text-secondary">{message}</p>
             <button
               onClick={() => router.push("/")}
-              className="mt-6 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="mt-6 rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover"
             >
               Go to Home
             </button>

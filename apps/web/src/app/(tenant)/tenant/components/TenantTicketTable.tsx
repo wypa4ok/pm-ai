@@ -22,7 +22,7 @@ export default function TenantTicketTable({ tickets }: TenantTicketTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
         <thead>
-          <tr className="text-xs uppercase text-slate-500">
+          <tr className="text-xs uppercase text-text-muted">
             <th className="py-3 pr-3 font-medium">Request</th>
             <th className="py-3 pr-3 font-medium">Category</th>
             <th className="py-3 pr-3 font-medium">Priority</th>
@@ -30,22 +30,22 @@ export default function TenantTicketTable({ tickets }: TenantTicketTableProps) {
             <th className="py-3 pr-3 font-medium">Opened</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-border">
           {tickets.map((ticket) => (
-            <tr key={ticket.id} className="hover:bg-slate-50">
+            <tr key={ticket.id} className="hover:bg-surface-raised">
               <td className="py-3 pr-3 align-top">
                 <Link href={`/tenant/tickets/${ticket.id}`}>
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-semibold text-slate-900 hover:underline">
+                    <div className="text-sm font-semibold text-text-primary hover:underline">
                       {ticket.subject}
                     </div>
                     {ticket.latestMessageSnippet && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-text-secondary">
                         {ticket.latestMessageSnippet}...
                       </p>
                     )}
                     {ticket.unitName && (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-text-muted">
                         {ticket.unitName}
                       </p>
                     )}
@@ -53,7 +53,7 @@ export default function TenantTicketTable({ tickets }: TenantTicketTableProps) {
                 </Link>
               </td>
               <td className="py-3 pr-3 align-top">
-                <span className="text-sm text-slate-700">{ticket.category}</span>
+                <span className="text-sm text-text-secondary">{ticket.category}</span>
               </td>
               <td className="py-3 pr-3 align-top">
                 <span
@@ -73,7 +73,7 @@ export default function TenantTicketTable({ tickets }: TenantTicketTableProps) {
                   {ticket.status}
                 </span>
               </td>
-              <td className="py-3 pr-3 align-top text-xs text-slate-500">
+              <td className="py-3 pr-3 align-top text-xs text-text-muted">
                 {new Date(ticket.openedAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "numeric",
@@ -92,29 +92,29 @@ function badgeColor(priority: string) {
   switch (priority) {
     case "URGENT":
     case "HIGH":
-      return "bg-red-100 text-red-700";
+      return "bg-red-500/10 text-red-400";
     case "MEDIUM":
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-500/10 text-amber-400";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
   }
 }
 
 function statusBadgeColor(status: string) {
   switch (status) {
     case "OPEN":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-500/10 text-blue-400";
     case "IN_PROGRESS":
-      return "bg-purple-100 text-purple-700";
+      return "bg-purple-500/10 text-purple-400";
     case "SCHEDULED":
-      return "bg-cyan-100 text-cyan-700";
+      return "bg-cyan-500/10 text-cyan-400";
     case "RESOLVED":
-      return "bg-green-100 text-green-700";
+      return "bg-green-500/10 text-green-400";
     case "CLOSED":
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
     case "ESCALATED":
-      return "bg-red-100 text-red-700";
+      return "bg-red-500/10 text-red-400";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-raised text-text-muted";
   }
 }

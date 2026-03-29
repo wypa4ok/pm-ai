@@ -89,19 +89,19 @@ export default async function TenantTicketsPage({
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
       <header className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-slate-500">My Requests</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Maintenance Tickets</h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm font-medium text-text-muted">My Requests</p>
+        <h1 className="text-2xl font-semibold text-text-primary">Maintenance Tickets</h1>
+        <p className="text-sm text-text-secondary">
           View and track your maintenance requests and inquiries.
         </p>
       </header>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <form className="grid gap-4 md:grid-cols-3" method="get">
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1 text-sm font-medium text-text-secondary">
             Status
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className="rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               name="status"
               defaultValue={status}
             >
@@ -114,10 +114,10 @@ export default async function TenantTicketsPage({
             </select>
           </label>
 
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1 text-sm font-medium text-text-secondary">
             Category
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className="rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
               name="category"
               defaultValue={category}
             >
@@ -130,10 +130,10 @@ export default async function TenantTicketsPage({
             </select>
           </label>
 
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
+          <label className="grid gap-1 text-sm font-medium text-text-secondary">
             Search
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+              className="rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
               name="search"
               defaultValue={search}
               placeholder="Search keywords"
@@ -142,13 +142,13 @@ export default async function TenantTicketsPage({
         </form>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         {serialized.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-slate-500">No tickets found.</p>
+            <p className="text-sm text-text-secondary">No tickets found.</p>
             <a
               href="/tenant/tickets/new"
-              className="mt-4 inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover"
             >
               Create New Request
             </a>

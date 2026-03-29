@@ -37,12 +37,8 @@ export default function TenantProfileForm({ tenant }: TenantProfileFormProps) {
     try {
       const response = await fetch(`/api/tenants/${tenant.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: phone.trim() || null,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() || null }),
       });
 
       if (!response.ok) {
@@ -62,55 +58,55 @@ export default function TenantProfileForm({ tenant }: TenantProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {success && (
-        <div className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
           Profile updated successfully!
         </div>
       )}
 
       {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       <div>
-        <p className="text-xs font-medium uppercase text-slate-500">Name</p>
-        <p className="mt-1 text-sm text-slate-900">
+        <p className="text-xs font-medium uppercase text-text-muted">Name</p>
+        <p className="mt-1 text-sm text-text-primary">
           {tenant.firstName} {tenant.lastName}
         </p>
       </div>
 
       <div>
-        <p className="text-xs font-medium uppercase text-slate-500">Email</p>
-        <p className="mt-1 text-sm text-slate-900">{tenant.email || "Not provided"}</p>
+        <p className="text-xs font-medium uppercase text-text-muted">Email</p>
+        <p className="mt-1 text-sm text-text-primary">{tenant.email || "Not provided"}</p>
       </div>
 
       <div>
-        <label htmlFor="phone" className="text-xs font-medium uppercase text-slate-500">
+        <label htmlFor="phone" className="text-xs font-medium uppercase text-text-muted">
           Phone Number
         </label>
         <input
           id="phone"
           type="tel"
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring"
+          className="mt-1 w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
           placeholder="(555) 123-4567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           disabled={saving}
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-text-muted">
           Your phone number for emergency contact
         </p>
       </div>
 
-      <div className="rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-600">
+      <div className="rounded-md border border-border bg-surface-alt px-4 py-3 text-xs text-text-muted">
         To update your name or email, please contact property management.
       </div>
 
       <button
         type="submit"
         disabled={saving}
-        className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed"
+        className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {saving ? "Saving..." : "Save Changes"}
       </button>

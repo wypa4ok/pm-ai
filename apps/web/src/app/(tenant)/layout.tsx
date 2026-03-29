@@ -37,23 +37,23 @@ export default async function TenantGroupLayout({
   const session = await requireTenantSession();
 
   return (
-    <section className="flex min-h-screen flex-col bg-white text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
+    <section className="flex min-h-screen flex-col bg-surface-deep text-text-primary">
+      <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
         <div className="flex items-center gap-8">
           <a href="/tenant" className="transition hover:opacity-80">
-            <p className="text-xs uppercase tracking-wide text-slate-300">Tenant Portal</p>
-            <h1 className="text-xl font-semibold">Your Home Requests</h1>
+            <p className="text-xs uppercase tracking-wide text-text-muted">Tenant Portal</p>
+            <h1 className="text-xl font-semibold text-text-primary">Your Home Requests</h1>
           </a>
           <nav className="flex gap-4">
             <a
               href="/tenant/tickets"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
             >
               Tickets
             </a>
             <a
               href="/tenant/profile"
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
             >
               Profile
             </a>
@@ -63,16 +63,16 @@ export default async function TenantGroupLayout({
           <div className="flex flex-col items-end gap-1 text-right text-sm">
             <div className="flex items-center gap-3">
               <RoleSwitcher roles={session.user.roles} activeRole={session.activeRole} />
-              <span className="rounded-full bg-emerald-200/30 px-2 py-0.5 text-xs font-semibold text-emerald-50">
+              <span className="rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
                 Tenant
               </span>
             </div>
-            <span className="font-medium">{session.user.email ?? "Signed in"}</span>
+            <span className="text-sm text-text-secondary">{session.user.email ?? "Signed in"}</span>
           </div>
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-md bg-red-500/20 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition"
+              className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition"
             >
               Log Out
             </button>

@@ -32,8 +32,8 @@ export default async function TenantProfilePage() {
   if (!tenant) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <h2 className="text-2xl font-semibold text-slate-900">Profile Not Found</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-2xl font-semibold text-text-primary">Profile Not Found</h2>
+        <p className="text-sm text-text-secondary">
           Your tenant profile could not be found. Please contact property management.
         </p>
       </div>
@@ -61,33 +61,33 @@ export default async function TenantProfilePage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
       <header className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-slate-500">Account</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Profile</h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm font-medium text-text-muted">Account</p>
+        <h1 className="text-2xl font-semibold text-text-primary">Profile</h1>
+        <p className="text-sm text-text-secondary">
           View your account information and update your contact details.
         </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Personal Information</h2>
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">Personal Information</h2>
           <TenantProfileForm tenant={tenantData} />
         </div>
 
         {tenantData.unit && (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Unit Information</h2>
+          <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-text-primary">Unit Information</h2>
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Unit</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
+                <p className="text-xs font-medium uppercase text-text-muted">Unit</p>
+                <p className="mt-1 text-sm font-semibold text-text-primary">
                   {tenantData.unit.name}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">Address</p>
-                <p className="mt-1 text-sm text-slate-700">
+                <p className="text-xs font-medium uppercase text-text-muted">Address</p>
+                <p className="mt-1 text-sm text-text-secondary">
                   {tenantData.unit.address1}
                   {tenantData.unit.address2 && (
                     <>
@@ -100,7 +100,7 @@ export default async function TenantProfilePage() {
                 </p>
               </div>
 
-              <div className="rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              <div className="rounded-md border border-border bg-surface-alt px-4 py-3 text-xs text-text-muted">
                 To update unit information, please contact property management.
               </div>
             </div>

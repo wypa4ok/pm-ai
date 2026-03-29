@@ -49,24 +49,24 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-surface-deep px-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface p-8 shadow-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <h1 className="text-2xl font-semibold text-text-primary">Welcome Back</h1>
+          <p className="mt-2 text-sm text-text-secondary">
             Log in to access your account
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+          <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
               Email
             </label>
             <input
@@ -75,13 +75,13 @@ function LoginContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
               Password
             </label>
             <input
@@ -90,7 +90,7 @@ function LoginContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-border bg-surface-alt px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-accent focus:ring-1 focus:ring-accent/30"
               placeholder="Your password"
             />
           </div>
@@ -98,18 +98,18 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-surface-deep hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-text-secondary">
             Don&apos;t have an account?{" "}
             <a
               href={`/auth/signup${searchParams.get("returnUrl") ? `?returnUrl=${searchParams.get("returnUrl")}${searchParams.get("email") ? `&email=${searchParams.get("email")}` : ""}` : searchParams.get("email") ? `?email=${searchParams.get("email")}` : ""}`}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-accent hover:text-accent-hover"
             >
               Sign up
             </a>
